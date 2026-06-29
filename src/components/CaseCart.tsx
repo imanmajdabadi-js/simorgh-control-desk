@@ -1,30 +1,52 @@
-import type { CaseCardShow } from '../types';
+import type { CaseType } from '../types';
 
-export interface CaseCartProps {
-  caseItem: CaseCardShow;
+export interface CaseCardProps {
+  caseItem: CaseType;
+  count: number;
+  onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
+  isEditing: boolean;
 }
 
-const CaseCart = ({ caseItem }: CaseCartProps) => {
+const CaseCard = ({ caseItem, count, onDelete, onEdit, isEditing }: CaseCardProps) => {
+  const textClass = 'text-white text-sm truncate';
+  const buttonClass = 'rounded-md py-1 px-3 text-white text-sm cursor-pointer whitespace-nowrap';
+
   return (
-    <div className="grid grid-cols-3 border rounded-2xl w-2/4 p-4 my-2">
-      <div>
-        <p>title:{caseItem.title}</p>
-        <p>customerName:{caseItem.customerName}</p>
-        <p>status:{caseItem.status}</p>
+    <article className="grid w-full max-w-3xl grid-cols-[48px_minmax(0,1.5fr)_minmax(0,1fr)_auto] items-center gap-4 my-2 rounded-2xl border bg-gray-500 p-4">
+      <div className="flex h-10 w-10 items-center justify-center rounded-md border bg-blue-600 text-sm text-white">
+        {count}
       </div>
 
-      <div>
-        <p>City:{caseItem.city}</p>
-        <p>estimatedLoss:{caseItem.estimatedLoss}</p>
-        <p>priority:{caseItem.priority}</p>
+      <div className="min-w-0">
+        <p className={textClass}>Title: {caseItem.title}</p>
+        <p className={textClass}>Customer: {caseItem.customerName}</p>
+        {!isEditing ? (
+          <p className={textClass}>Status: {caseItem.status}</p>
+        ) : (
+          <>
+            <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
+          </>
+        )}
       </div>
-      <div className="flex items-center gap-4">
-        <button>View</button>
-        <button>Edit</button>
-        <button>Delete</button>
+
+      <div className="min-w-0">
+        <p className={textClass}>City: {caseItem.city}</p>
+        <p className={textClass}>Loss: {caseItem.estimatedLoss}</p>
+        <p className={textClass}>Priority: {caseItem.priority}</p>
       </div>
-    </div>
+
+      <div className="flex shrink-0 items-center gap-2">
+        <button className={`bg-blue-700 ${buttonClass}`}>View</button>
+        <button onClick={() => onEdit(caseItem.id)} className={`bg-green-700 ${buttonClass}`}>
+          Edit
+        </button>
+        <button onClick={() => onDelete(caseItem.id)} className={`bg-red-700 ${buttonClass}`}>
+          Delete
+        </button>
+      </div>
+    </article>
   );
 };
 
-export default CaseCart;
+export default CaseCard;

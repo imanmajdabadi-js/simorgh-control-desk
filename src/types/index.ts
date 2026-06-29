@@ -1,11 +1,5 @@
-type CaseTag = 'vip' | 'airport' | 'delay';
-
-export interface CaseTagList {
-  tags: CaseTag[];
-}
-
-export interface Case {
-  id: 1;
+export interface CaseType {
+  id: string;
   title: string;
   customerName: string;
   category: Category;
@@ -17,27 +11,38 @@ export interface Case {
   createdAt: string | Date;
   lastUpdatedAt: string | Date;
   description: string;
-  tags: CaseTagList;
+  tags: CaseTag[];
   isEscalated: boolean;
 }
 
-export interface CaseCardShow {
-  id: string;
-  title: string;
-  customerName: string;
-  status: Status;
-  city: City;
-  estimatedLoss: number;
-  priority: Priority;
-}
+type CaseTag =
+  | 'vip'
+  | 'airport'
+  | 'delay'
+  | 'address'
+  | 'delivery'
+  | 'flight'
+  | 'pricing'
+  | 'refund'
+  | 'urgent'
+  | 'partner'
+  | 'cancelled'
+  | 'booking'
+  | 'duplicate'
+  | 'system'
+  | 'support'
+  | 'approval'
+  | 'payment'
+  | 'order'
+  | 'bug';
 
-type Category = 'travel' | 'payment' | 'delivery' | 'refund' | 'support';
+export type Category = 'travel' | 'payment' | 'delivery' | 'refund' | 'support';
 
-type Priority = 'high' | 'critical' | 'medium' | 'low';
+export type Priority = 'high' | 'critical' | 'medium' | 'low';
 
-type City = 'Tehran' | 'Shiraz' | 'Mashhad' | 'Tabriz' | 'Isfahan' | 'Rasht' | 'Yazd';
+export type City = 'Tehran' | 'Shiraz' | 'Mashhad' | 'Tabriz' | 'Isfahan' | 'Rasht' | 'Yazd';
 
-type Status = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type Status = 'open' | 'in_progress' | 'resolved' | 'closed';
 
 export interface SummaryType {
   title: string;
