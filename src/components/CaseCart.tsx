@@ -24,26 +24,45 @@ const CaseCard = ({ caseItem, count, onDelete, onEdit, isEditing }: CaseCardProp
         {!isEditing ? (
           <p className={textClass}>Status: {caseItem.status}</p>
         ) : (
-          <>
-            <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
-          </>
+          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
         )}
       </div>
 
       <div className="min-w-0">
-        <p className={textClass}>City: {caseItem.city}</p>
-        <p className={textClass}>Loss: {caseItem.estimatedLoss}</p>
-        <p className={textClass}>Priority: {caseItem.priority}</p>
+        {!isEditing ? (
+          <p className={textClass}>City: {caseItem.city}</p>
+        ) : (
+          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
+        )}
+        {!isEditing ? (
+          <p className={textClass}>Loss: {caseItem.estimatedLoss}</p>
+        ) : (
+          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="number" />
+        )}
+        {!isEditing ? (
+          <p className={textClass}>Priority: {caseItem.priority}</p>
+        ) : (
+          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
+        )}
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        <button className={`bg-blue-700 ${buttonClass}`}>View</button>
-        <button onClick={() => onEdit(caseItem.id)} className={`bg-green-700 ${buttonClass}`}>
-          Edit
-        </button>
-        <button onClick={() => onDelete(caseItem.id)} className={`bg-red-700 ${buttonClass}`}>
-          Delete
-        </button>
+        {!isEditing ? (
+          <>
+            <button className={`bg-blue-700 ${buttonClass}`}>View</button>
+            <button onClick={() => onEdit(caseItem.id)} className={`bg-green-700 ${buttonClass}`}>
+              Edit
+            </button>
+            <button onClick={() => onDelete(caseItem.id)} className={`bg-red-700 ${buttonClass}`}>
+              Delete
+            </button>
+          </>
+        ) : (
+          <>
+            <button className={`bg-sky-950 ${buttonClass}`}>Save</button>
+            <button className={`bg-amber-500 ${buttonClass}`}>Cancel</button>
+          </>
+        )}
       </div>
     </article>
   );
