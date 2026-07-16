@@ -9,9 +9,9 @@ interface ToastProps {
 }
 
 const toneClass = {
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  danger: 'border-rose-200 bg-rose-50 text-rose-800',
-  info: 'border-blue-200 bg-blue-50 text-blue-800',
+  success: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+  danger: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+  info: 'border-blue-500/40 bg-blue-500/10 text-blue-200',
 };
 
 const Toast = ({ message }: ToastProps) => {
@@ -20,8 +20,8 @@ const Toast = ({ message }: ToastProps) => {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-30 max-w-sm rounded-3xl border bg-white p-4 shadow-2xl shadow-slate-200">
-      <div className={`rounded-2xl border px-4 py-3 ${toneClass[message.tone]}`}>
+    <div className="fixed bottom-5 right-5 z-30 max-w-sm rounded-md border border-slate-700 bg-slate-950/95 p-3 shadow-2xl shadow-black/40">
+      <div className={`rounded-md border px-4 py-3 ${toneClass[message.tone]}`}>
         <p className="text-sm font-black">{message.title}</p>
         <p className="mt-1 text-xs leading-5 opacity-80">{message.text}</p>
       </div>

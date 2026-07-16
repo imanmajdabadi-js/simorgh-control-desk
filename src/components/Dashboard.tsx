@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [formMode, setFormMode] = useState<FormMode>(null);
   const [caseFormItem, setCaseFormItem] = useState<CaseType | null>(null);
   const [filters, setFilters] = useState<CaseFilters>(initialFilters);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedCaseId, setSelectedCaseId] = useState(
     () => loadCases(initialCases)[0]?.id || '',
   );
@@ -33,6 +34,12 @@ const Dashboard = () => {
 
   const visibleCases = useMemo(() => filterCases(caseList, filters), [caseList, filters]);
   const stats = useMemo(() => getCaseStats(caseList), [caseList]);
+  const pageSize = 5;
+  const pageCount = Math.max(1, Math.ceil(visibleCases.length / pageSize));
+  const activePage = Math.min(currentPage, pageCount);
+  const firstCaseIndex = (activePage - 1) * pageSize;
+  const firstVisibleCase = visibleCases.length === 0 ? 0 : firstCaseIndex + 1;
+  const pageCases = visibleCases.slice(firstCaseIndex, firstCaseIndex + pageSize);
   const selectedCase = caseList.find((caseItem) => caseItem.id === selectedCaseId) || null;
   const editingCaseId = formMode === 'edit' ? caseFormItem?.id || null : null;
 
@@ -57,6 +64,7 @@ const Dashboard = () => {
       value: stats.totalCases.toString(),
       caption: 'همه موارد ثبت‌شده عملیاتی',
       accent: 'blue',
+      icon: '▤',
     },
     {
       id: 'open',
@@ -64,6 +72,7 @@ const Dashboard = () => {
       value: stats.openCases.toString(),
       caption: 'مواردی که هنوز نیاز به اقدام دارند',
       accent: 'green',
+      icon: '↗',
     },
     {
       id: 'priority',
@@ -71,20 +80,7 @@ const Dashboard = () => {
       value: stats.criticalCases.toString(),
       caption: 'مواردی که باید زودتر دیده شوند',
       accent: 'rose',
-    },
-    {
-      id: 'escalated',
-      title: 'ارجاع‌شده',
-      value: stats.escalatedCases.toString(),
-      caption: 'پرونده‌های نیازمند توجه مدیر',
-      accent: 'violet',
-    },
-    {
-      id: 'unassigned',
-      title: 'بدون مسئول',
-      value: stats.unassignedCases.toString(),
-      caption: 'مواردی که هنوز مالک ندارند',
-      accent: 'orange',
+      icon: '!',
     },
     {
       id: 'loss',
@@ -92,6 +88,15 @@ const Dashboard = () => {
       value: formatMoney(stats.totalLoss),
       caption: 'جمع اثر مالی پرونده‌ها',
       accent: 'blue',
+      icon: '$',
+    },
+    {
+      id: 'escalated',
+      title: 'ارجاع‌شده',
+      value: stats.escalatedCases.toString(),
+      caption: 'پرونده‌های نیازمند توجه مدیر',
+      accent: 'violet',
+      icon: '↑',
     },
   ];
 
@@ -179,6 +184,7 @@ const Dashboard = () => {
     setFormMode('add');
     setCaseFormItem(draftCase);
     setSelectedCaseId('');
+    setCurrentPage(1);
   };
 
   const handleSaveCase = (savedCase: CaseType) => {
@@ -205,6 +211,7 @@ const Dashboard = () => {
     setSelectedCaseId(savedCase.id);
     setCaseFormItem(null);
     setFormMode(null);
+    setCurrentPage(1);
   };
 
   const handleCancelForm = () => {
@@ -218,6 +225,7 @@ const Dashboard = () => {
     setCaseFormItem(null);
     setFormMode(null);
     setFilters(initialFilters);
+    setCurrentPage(1);
 
     showToast({
       title: 'داده‌ها بازنشانی شد',
@@ -227,30 +235,57 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_32%),linear-gradient(135deg,#f8fafc,#eef2ff_48%,#f8fafc)] text-slate-900">
+    <div
+      className="min-h-screen bg-[#020b1c] bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_28%)] text-slate-100"
+      dir="ltr"
+    >
       <Header
         totalCases={caseList.length}
         onAddCase={handleAddCase}
         onResetCases={handleResetCases}
       />
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-6">
+      <main className="mx-auto flex max-w-[1480px] flex-col gap-4 px-5 py-4">
         <SummaryCard summarys={summaryItems} />
 
-        <section className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_470px]">
           <Filters
             filters={filters}
-            onChange={setFilters}
-            onReset={() => setFilters(initialFilters)}
+            onChange={(nextFilters) => {
+              setFilters(nextFilters);
+              setCurrentPage(1);
+            }}
+            onReset={() => {
+              setFilters(initialFilters);
+              setCurrentPage(1);
+            }}
           />
 
-          <div className="min-w-0">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div
+            className="min-w-0 rounded-md border border-slate-700/80 bg-slate-900/60 p-4 shadow-[0_18px_70px_rgba(15,23,42,0.22)]"
+            dir="rtl"
+          >
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-black text-slate-950">لیست پرونده‌ها</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  نمایش {visibleCases.length} مورد از {caseList.length} پرونده
+                <h2 className="text-xl font-black text-white">لیست پرونده‌ها</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  نمایش {firstVisibleCase}-{Math.min(firstCaseIndex + pageSize, visibleCases.length)} از{' '}
+                  {visibleCases.length} پرونده
                 </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  className="grid h-10 w-12 place-items-center rounded-md border border-blue-500/60 bg-blue-500/10 text-blue-300"
+                  type="button"
+                >
+                  ☰
+                </button>
+                <button
+                  className="grid h-10 w-12 place-items-center rounded-md border border-slate-700 bg-slate-950/40 text-slate-300"
+                  type="button"
+                >
+                  ≡
+                </button>
               </div>
             </div>
 
@@ -261,8 +296,56 @@ const Dashboard = () => {
               onView={setSelectedCaseId}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
-              cases={visibleCases}
+              cases={pageCases}
             />
+
+            <div
+              className="mt-5 flex items-center justify-center gap-2 text-sm text-slate-400"
+              dir="ltr"
+            >
+              <button
+                className="grid h-9 w-9 place-items-center rounded-md border border-slate-700 text-slate-300 transition hover:border-blue-400 hover:text-blue-300"
+                type="button"
+                onClick={() => setCurrentPage(Math.max(1, activePage - 1))}
+              >
+                ‹
+              </button>
+              {Array.from({ length: Math.min(pageCount, 3) }).map((_, index) => {
+                const pageNumber = index + 1;
+
+                return (
+                  <button
+                    className={`grid h-9 w-9 place-items-center rounded-md transition ${
+                      activePage === pageNumber
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-950/40'
+                        : 'border border-slate-700 text-slate-300 hover:border-blue-400'
+                    }`}
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => setCurrentPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+              {pageCount > 3 ? <span className="px-3">...</span> : null}
+              {pageCount > 3 ? (
+                <button
+                  className="grid h-9 w-9 place-items-center rounded-md border border-slate-700 text-slate-300 transition hover:border-blue-400"
+                  type="button"
+                  onClick={() => setCurrentPage(pageCount)}
+                >
+                  {pageCount}
+                </button>
+              ) : null}
+              <button
+                className="grid h-9 w-9 place-items-center rounded-md border border-slate-700 text-slate-300 transition hover:border-blue-400 hover:text-blue-300"
+                type="button"
+                onClick={() => setCurrentPage(Math.min(pageCount, activePage + 1))}
+              >
+                ›
+              </button>
+            </div>
           </div>
 
           {formMode ? (
@@ -274,7 +357,11 @@ const Dashboard = () => {
               onSave={handleSaveCase}
             />
           ) : (
-            <CaseDetail caseItem={selectedCase} onEdit={handleEdit} />
+            <CaseDetail
+              caseItem={selectedCase}
+              onClose={() => setSelectedCaseId('')}
+              onEdit={handleEdit}
+            />
           )}
         </section>
       </main>

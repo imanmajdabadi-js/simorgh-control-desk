@@ -22,10 +22,10 @@ const CaseList = ({
 }: CaseListProps) => {
   if (cases.length === 0) {
     return (
-      <div className="grid min-h-80 place-items-center rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
+      <div className="grid min-h-80 place-items-center rounded-md border border-dashed border-slate-700 bg-slate-950/30 p-8 text-center">
         <div>
-          <p className="text-lg font-black text-slate-900">پرونده‌ای پیدا نشد</p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="text-lg font-black text-white">پرونده‌ای پیدا نشد</p>
+          <p className="mt-2 text-sm text-slate-400">
             فیلترها یا متن جستجو را تغییر بده.
           </p>
         </div>
@@ -35,7 +35,7 @@ const CaseList = ({
 
   return (
     <div className="space-y-3">
-      {cases.map((caseItem, index) => {
+      {cases.map((caseItem) => {
         return (
           <CaseCart
             isEditing={editingCaseId === caseItem.id}
@@ -44,7 +44,6 @@ const CaseList = ({
             onDelete={onDelete}
             onStatusChange={onStatusChange}
             onView={onView}
-            count={index + 1}
             key={caseItem.id}
             caseItem={caseItem}
           />

@@ -9,7 +9,6 @@ import {
 
 export interface CaseCardProps {
   caseItem: CaseType;
-  count: number;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
   onStatusChange: (id: string, status: Status) => void;
@@ -19,22 +18,21 @@ export interface CaseCardProps {
 }
 
 const priorityClass = {
-  critical: 'bg-rose-100 text-rose-700',
-  high: 'bg-orange-100 text-orange-700',
-  medium: 'bg-blue-100 text-blue-700',
-  low: 'bg-emerald-100 text-emerald-700',
+  critical: 'border-rose-500 text-rose-300 bg-rose-500/10',
+  high: 'border-amber-500 text-amber-300 bg-amber-500/10',
+  medium: 'border-yellow-500 text-yellow-300 bg-yellow-500/10',
+  low: 'border-cyan-500 text-cyan-300 bg-cyan-500/10',
 };
 
 const statusClass = {
-  open: 'bg-cyan-100 text-cyan-700',
-  in_progress: 'bg-violet-100 text-violet-700',
-  resolved: 'bg-emerald-100 text-emerald-700',
-  closed: 'bg-slate-200 text-slate-600',
+  open: 'border-blue-500 text-blue-300 bg-blue-500/10',
+  in_progress: 'border-sky-500 text-sky-300 bg-sky-500/10',
+  resolved: 'border-emerald-500 text-emerald-300 bg-emerald-500/10',
+  closed: 'border-slate-500 text-slate-300 bg-slate-500/10',
 };
 
 const CaseCard = ({
   caseItem,
-  count,
   onDelete,
   onEdit,
   onStatusChange,
@@ -42,43 +40,50 @@ const CaseCard = ({
   isEditing,
   isSelected,
 }: CaseCardProps) => {
+  const caseCode = `#SC-${1040 + Number(caseItem.id)}`;
+
   return (
     <article
-      className={`rounded-3xl border bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl ${
-        isSelected ? 'border-blue-400 ring-4 ring-blue-100' : 'border-slate-200'
+      className={`rounded-md border bg-slate-950/20 p-4 transition duration-300 hover:-translate-y-0.5 hover:bg-slate-900/70 ${
+        isSelected ? 'border-blue-500 shadow-[inset_3px_0_0_#3b82f6]' : 'border-slate-700/80'
       }`}
+      dir="ltr"
     >
-      <div className="grid gap-4 xl:grid-cols-[44px_minmax(0,1fr)_220px_auto] xl:items-center">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-sm font-black text-white">
-          {count}
-        </div>
-
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusClass[caseItem.status]}`}>
-              {statusLabels[caseItem.status]}
-            </span>
-            <span className={`rounded-full px-3 py-1 text-xs font-bold ${priorityClass[caseItem.priority]}`}>
-              {priorityLabels[caseItem.priority]}
-            </span>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_170px_92px] lg:items-center">
+        <div className="min-w-0" dir="rtl">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-sm font-black text-blue-300">{caseCode}</span>
+            <h3 className="truncate text-base font-black text-white">{caseItem.title}</h3>
           </div>
 
-          <h3 className="mt-3 truncate text-base font-black text-slate-950">
-            {caseItem.title}
-          </h3>
-          <p className="mt-1 truncate text-sm text-slate-500">
-            {caseItem.customerName} / {cityLabels[caseItem.city]}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+            <span>{caseItem.customerName}</span>
+            <span className="h-4 w-px bg-slate-700" />
+            <span>{cityLabels[caseItem.city]}</span>
+            <span className="h-4 w-px bg-slate-700" />
+            <span>{caseItem.assignedTo || 'بدون مسئول'}</span>
+          </div>
+
+          <p className="mt-3 text-sm text-slate-300">ضرر احتمالی: {formatMoney(caseItem.estimatedLoss)}</p>
         </div>
 
-        <div className="rounded-2xl bg-slate-50 p-3 text-sm">
-          <p className="font-bold text-slate-950">{formatMoney(caseItem.estimatedLoss)}</p>
-          <p className="mt-1 text-xs text-slate-500">ضرر احتمالی</p>
+        <div className="flex flex-wrap gap-2" dir="rtl">
+          <span className={`rounded-md border px-3 py-1 text-xs font-bold ${statusClass[caseItem.status]}`}>
+            {statusLabels[caseItem.status]}
+          </span>
+          <span className={`rounded-md border px-3 py-1 text-xs font-bold ${priorityClass[caseItem.priority]}`}>
+            {priorityLabels[caseItem.priority]}
+          </span>
+          {caseItem.isEscalated ? (
+            <span className="rounded-md border border-violet-500 bg-violet-500/10 px-3 py-1 text-xs font-bold text-violet-300">
+              ارجاع‌شده
+            </span>
+          ) : null}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 border-slate-700 lg:border-l lg:pl-4" dir="rtl">
           <select
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 outline-none transition hover:border-blue-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+            className="rounded-md border border-slate-700 bg-[#071528] px-2 py-2 text-xs font-bold text-slate-300 outline-none transition hover:border-blue-400 focus:border-blue-400"
             value={caseItem.status}
             onChange={(event) => onStatusChange(caseItem.id, event.target.value as Status)}
           >
@@ -89,21 +94,21 @@ const CaseCard = ({
             ))}
           </select>
           <button
-            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
+            className="text-right text-xs font-bold text-slate-300 transition hover:text-blue-300"
             type="button"
             onClick={() => onView(caseItem.id)}
           >
             مشاهده
           </button>
           <button
-            className="rounded-xl border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50"
+            className="text-right text-xs font-bold text-slate-300 transition hover:text-blue-300"
             type="button"
             onClick={() => onEdit(caseItem.id)}
           >
             {isEditing ? 'در حال ویرایش' : 'ویرایش'}
           </button>
           <button
-            className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-50"
+            className="text-right text-xs font-bold text-rose-300 transition hover:text-rose-200"
             type="button"
             onClick={() => onDelete(caseItem.id)}
           >

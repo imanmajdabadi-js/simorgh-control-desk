@@ -47,6 +47,7 @@ export type Status = 'open' | 'in_progress' | 'resolved' | 'closed';
 export interface SummaryType {
   accent: 'blue' | 'green' | 'orange' | 'rose' | 'violet';
   caption: string;
+  icon: string;
   title: string;
   value: string;
   id: string;

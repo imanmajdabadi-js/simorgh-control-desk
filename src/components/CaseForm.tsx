@@ -136,12 +136,15 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
   };
 
   return (
-    <aside className="h-full rounded-3xl border border-blue-100 bg-white p-6 shadow-xl shadow-blue-100/60">
-      <div className="border-b border-slate-100 pb-5">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-500">
+    <aside
+      className="h-full rounded-md border border-slate-700/80 bg-slate-900/60 p-5 shadow-[0_18px_70px_rgba(15,23,42,0.22)]"
+      dir="rtl"
+    >
+      <div className="border-b border-slate-700/80 pb-5">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">
           {mode === 'add' ? 'پرونده جدید' : 'ویرایش پرونده'}
         </p>
-        <h2 className="mt-2 text-xl font-black text-slate-950">
+        <h2 className="mt-2 text-xl font-black text-white">
           {mode === 'add' ? 'ثبت مورد عملیاتی' : 'اصلاح جزئیات پرونده'}
         </h2>
       </div>
@@ -233,12 +236,12 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
           value={values.description}
         />
 
-        <label className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
+        <label className="flex items-center justify-between gap-4 rounded-md border border-slate-700 bg-[#071528] px-4 py-3">
           <span>
-            <span className="block text-sm font-black text-slate-800">
+            <span className="block text-sm font-black text-slate-200">
               پرونده ارجاع‌شده
             </span>
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-slate-400">
               وقتی پرونده نیاز به توجه مدیر دارد، این گزینه را فعال کن.
             </span>
           </span>
@@ -252,13 +255,13 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
 
         <div className="flex flex-col gap-3 pt-2 sm:flex-row">
           <button
-            className="h-12 flex-1 rounded-2xl bg-blue-600 px-5 text-sm font-black text-white shadow-lg shadow-blue-200 transition duration-300 hover:-translate-y-0.5 hover:bg-blue-700"
+            className="h-12 flex-1 rounded-md bg-blue-600 px-5 text-sm font-black text-white shadow-lg shadow-blue-950/40 transition duration-300 hover:-translate-y-0.5 hover:bg-blue-500"
             type="submit"
           >
             {mode === 'add' ? 'ثبت پرونده' : 'ذخیره تغییرات'}
           </button>
           <button
-            className="h-12 flex-1 rounded-2xl border border-slate-200 px-5 text-sm font-black text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+            className="h-12 flex-1 rounded-md border border-slate-700 px-5 text-sm font-black text-slate-300 transition hover:border-blue-400 hover:text-blue-300"
             onClick={onCancel}
             type="button"
           >
@@ -283,14 +286,14 @@ interface FieldProps {
 const TextField = ({ error, label, name, onChange, value }: FieldProps) => {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-bold text-slate-700">{label}</span>
+      <span className="text-sm font-bold text-slate-300">{label}</span>
       <input
-        className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
+        className="h-11 w-full rounded-md border border-slate-700 bg-[#071528] px-4 text-sm text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
         name={name}
         onChange={onChange}
         value={value}
       />
-      {error ? <span className="block text-xs font-bold text-rose-600">{error}</span> : null}
+      {error ? <span className="block text-xs font-bold text-rose-300">{error}</span> : null}
     </label>
   );
 };
@@ -303,9 +306,9 @@ interface SelectFieldProps extends Omit<FieldProps, 'value'> {
 const SelectField = ({ label, name, onChange, options, value }: SelectFieldProps) => {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-bold text-slate-700">{label}</span>
+      <span className="text-sm font-bold text-slate-300">{label}</span>
       <select
-        className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
+        className="h-11 w-full rounded-md border border-slate-700 bg-[#071528] px-4 text-sm text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
         name={name}
         onChange={onChange}
         value={value}
@@ -323,14 +326,14 @@ const SelectField = ({ label, name, onChange, options, value }: SelectFieldProps
 const TextareaField = ({ error, label, name, onChange, value }: FieldProps) => {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-bold text-slate-700">{label}</span>
+      <span className="text-sm font-bold text-slate-300">{label}</span>
       <textarea
-        className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
+        className="min-h-28 w-full resize-none rounded-md border border-slate-700 bg-[#071528] px-4 py-3 text-sm leading-6 text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
         name={name}
         onChange={onChange}
         value={value}
       />
-      {error ? <span className="block text-xs font-bold text-rose-600">{error}</span> : null}
+      {error ? <span className="block text-xs font-bold text-rose-300">{error}</span> : null}
     </label>
   );
 };
