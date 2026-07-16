@@ -54,7 +54,13 @@ export interface SummaryType {
 
 export type FilterValue = 'all';
 
-export type CaseSort = 'newest' | 'oldest' | 'highest_loss';
+export type CaseSort =
+  | 'newest'
+  | 'oldest'
+  | 'priority_high'
+  | 'priority_low'
+  | 'highest_loss'
+  | 'lowest_loss';
 
 export interface CaseFilters {
   status: Status | FilterValue;

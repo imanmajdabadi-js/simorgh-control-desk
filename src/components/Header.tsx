@@ -1,9 +1,10 @@
 interface HeaderProps {
   totalCases: number;
   onAddCase: () => void;
+  onResetCases: () => void;
 }
 
-const Header = ({ totalCases, onAddCase }: HeaderProps) => {
+const Header = ({ totalCases, onAddCase, onResetCases }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-20 border-b border-white/60 bg-white/80 px-5 py-4 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -13,25 +14,32 @@ const Header = ({ totalCases, onAddCase }: HeaderProps) => {
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.26em] text-blue-500">
-              Simorgh
+              سیمرغ
             </p>
             <h1 className="text-2xl font-black tracking-tight text-slate-950">
-              Control Desk
+              میز کنترل عملیات
             </h1>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm">
-            <span className="text-slate-500">Total cases</span>
-            <strong className="ml-2 text-slate-950">{totalCases}</strong>
+            <span className="text-slate-500">کل پرونده‌ها</span>
+            <strong className="me-2 text-slate-950">{totalCases}</strong>
           </div>
+          <button
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 transition duration-300 hover:-translate-y-1 hover:border-blue-300 hover:text-blue-600"
+            type="button"
+            onClick={onResetCases}
+          >
+            بازنشانی داده
+          </button>
           <button
             className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition duration-300 hover:-translate-y-1 hover:bg-blue-700"
             type="button"
             onClick={onAddCase}
           >
-            + Add Case
+            + ثبت پرونده
           </button>
         </div>
       </div>

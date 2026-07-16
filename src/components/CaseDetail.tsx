@@ -1,17 +1,24 @@
 import type { CaseType } from '../types';
-import { formatMoney, priorityLabels, statusLabels } from '../utils';
+import {
+  categoryLabels,
+  cityLabels,
+  formatMoney,
+  priorityLabels,
+  statusLabels,
+} from '../utils';
 
 interface CaseDetailProps {
   caseItem: CaseType | null;
+  onEdit: (id: string) => void;
 }
 
-const CaseDetail = ({ caseItem }: CaseDetailProps) => {
+const CaseDetail = ({ caseItem, onEdit }: CaseDetailProps) => {
   if (!caseItem) {
     return (
       <aside className="h-full rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center">
-        <p className="text-lg font-black text-slate-900">No case selected</p>
+        <p className="text-lg font-black text-slate-900">پرونده‌ای انتخاب نشده</p>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Choose a case from the list to see full customer and loss details.
+          از لیست یک پرونده را انتخاب کن تا جزئیات مشتری و وضعیت را ببینی.
         </p>
       </aside>
     );
@@ -22,7 +29,7 @@ const CaseDetail = ({ caseItem }: CaseDetailProps) => {
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-500">
-            Case details
+            جزئیات پرونده
           </p>
           <h2 className="mt-2 text-xl font-black leading-8 text-slate-950">
             {caseItem.title}
@@ -30,27 +37,28 @@ const CaseDetail = ({ caseItem }: CaseDetailProps) => {
         </div>
         {caseItem.isEscalated ? (
           <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
-            Escalated
+            ارجاع‌شده
           </span>
         ) : null}
       </div>
 
       <div className="mt-5 space-y-4">
-        <DetailRow label="Customer" value={caseItem.customerName} />
-        <DetailRow label="City" value={caseItem.city} />
-        <DetailRow label="Assigned to" value={caseItem.assignedTo || 'Unassigned'} />
-        <DetailRow label="Priority" value={priorityLabels[caseItem.priority]} />
-        <DetailRow label="Status" value={statusLabels[caseItem.status]} />
-        <DetailRow label="Estimated loss" value={formatMoney(caseItem.estimatedLoss)} />
+        <DetailRow label="مشتری" value={caseItem.customerName} />
+        <DetailRow label="دسته‌بندی" value={categoryLabels[caseItem.category]} />
+        <DetailRow label="شهر" value={cityLabels[caseItem.city]} />
+        <DetailRow label="مسئول" value={caseItem.assignedTo || 'بدون مسئول'} />
+        <DetailRow label="اولویت" value={priorityLabels[caseItem.priority]} />
+        <DetailRow label="وضعیت" value={statusLabels[caseItem.status]} />
+        <DetailRow label="ضرر احتمالی" value={formatMoney(caseItem.estimatedLoss)} />
       </div>
 
       <div className="mt-6 border-t border-slate-100 pt-5">
-        <h3 className="text-sm font-black text-slate-950">Description</h3>
+        <h3 className="text-sm font-black text-slate-950">توضیحات</h3>
         <p className="mt-2 text-sm leading-7 text-slate-500">{caseItem.description}</p>
       </div>
 
       <div className="mt-6 border-t border-slate-100 pt-5">
-        <h3 className="text-sm font-black text-slate-950">Tags</h3>
+        <h3 className="text-sm font-black text-slate-950">برچسب‌ها</h3>
         <div className="mt-3 flex flex-wrap gap-2">
           {caseItem.tags.map((tag) => (
             <span
@@ -62,6 +70,14 @@ const CaseDetail = ({ caseItem }: CaseDetailProps) => {
           ))}
         </div>
       </div>
+
+      <button
+        className="mt-6 h-12 w-full rounded-2xl bg-slate-950 text-sm font-black text-white transition duration-300 hover:-translate-y-0.5 hover:bg-blue-700"
+        onClick={() => onEdit(caseItem.id)}
+        type="button"
+      >
+        ویرایش پرونده
+      </button>
     </aside>
   );
 };

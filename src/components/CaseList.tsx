@@ -1,10 +1,11 @@
-import type { CaseType } from '../types';
+import type { CaseType, Status } from '../types';
 import CaseCart from './CaseCart';
 
 interface CaseListProps {
   cases: CaseType[];
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
+  onStatusChange: (id: string, status: Status) => void;
   onView: (id: string) => void;
   editingCaseId: string | null;
   selectedCaseId: string;
@@ -14,6 +15,7 @@ const CaseList = ({
   cases,
   onDelete,
   onEdit,
+  onStatusChange,
   onView,
   editingCaseId,
   selectedCaseId,
@@ -22,9 +24,9 @@ const CaseList = ({
     return (
       <div className="grid min-h-80 place-items-center rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
         <div>
-          <p className="text-lg font-black text-slate-900">No cases found</p>
+          <p className="text-lg font-black text-slate-900">پرونده‌ای پیدا نشد</p>
           <p className="mt-2 text-sm text-slate-500">
-            Try changing filters or search text.
+            فیلترها یا متن جستجو را تغییر بده.
           </p>
         </div>
       </div>
@@ -40,6 +42,7 @@ const CaseList = ({
             isSelected={selectedCaseId === caseItem.id}
             onEdit={onEdit}
             onDelete={onDelete}
+            onStatusChange={onStatusChange}
             onView={onView}
             count={index + 1}
             key={caseItem.id}

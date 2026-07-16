@@ -1,1 +1,17 @@
 @import 'tailwindcss';
+
+:root {
+  font-family: Vazirmatn, 'B Yekan', Tahoma, Arial, sans-serif;
+}
+
+body {
+  direction: rtl;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

@@ -1,11 +1,18 @@
-import type { CaseType } from '../types';
-import { formatMoney, priorityLabels, statusLabels } from '../utils';
+import type { CaseType, Status } from '../types';
+import {
+  cityLabels,
+  formatMoney,
+  priorityLabels,
+  statusLabels,
+  statusOptions,
+} from '../utils';
 
 export interface CaseCardProps {
   caseItem: CaseType;
   count: number;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
+  onStatusChange: (id: string, status: Status) => void;
   onView: (id: string) => void;
   isEditing: boolean;
   isSelected: boolean;
@@ -30,6 +37,7 @@ const CaseCard = ({
   count,
   onDelete,
   onEdit,
+  onStatusChange,
   onView,
   isEditing,
   isSelected,
@@ -59,36 +67,47 @@ const CaseCard = ({
             {caseItem.title}
           </h3>
           <p className="mt-1 truncate text-sm text-slate-500">
-            {caseItem.customerName} / {caseItem.city}
+            {caseItem.customerName} / {cityLabels[caseItem.city]}
           </p>
         </div>
 
         <div className="rounded-2xl bg-slate-50 p-3 text-sm">
           <p className="font-bold text-slate-950">{formatMoney(caseItem.estimatedLoss)}</p>
-          <p className="mt-1 text-xs text-slate-500">Estimated loss</p>
+          <p className="mt-1 text-xs text-slate-500">ضرر احتمالی</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <select
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 outline-none transition hover:border-blue-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+            value={caseItem.status}
+            onChange={(event) => onStatusChange(caseItem.id, event.target.value as Status)}
+          >
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {statusLabels[status]}
+              </option>
+            ))}
+          </select>
           <button
             className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
             type="button"
             onClick={() => onView(caseItem.id)}
           >
-            View
+            مشاهده
           </button>
           <button
             className="rounded-xl border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50"
             type="button"
             onClick={() => onEdit(caseItem.id)}
           >
-            {isEditing ? 'Editing' : 'Edit'}
+            {isEditing ? 'در حال ویرایش' : 'ویرایش'}
           </button>
           <button
             className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-50"
             type="button"
             onClick={() => onDelete(caseItem.id)}
           >
-            Delete
+            حذف
           </button>
         </div>
       </div>
