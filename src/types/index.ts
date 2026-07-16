@@ -45,7 +45,21 @@ export type City = 'Tehran' | 'Shiraz' | 'Mashhad' | 'Tabriz' | 'Isfahan' | 'Ras
 export type Status = 'open' | 'in_progress' | 'resolved' | 'closed';
 
 export interface SummaryType {
+  accent: 'blue' | 'green' | 'orange' | 'rose' | 'violet';
+  caption: string;
   title: string;
-  number: number;
+  value: string;
   id: string;
+}
+
+export type FilterValue = 'all';
+
+export type CaseSort = 'newest' | 'oldest' | 'highest_loss';
+
+export interface CaseFilters {
+  status: Status | FilterValue;
+  priority: Priority | FilterValue;
+  city: City | FilterValue;
+  search: string;
+  sort: CaseSort;
 }

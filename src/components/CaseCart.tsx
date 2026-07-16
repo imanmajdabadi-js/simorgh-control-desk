@@ -1,68 +1,96 @@
 import type { CaseType } from '../types';
+import { formatMoney, priorityLabels, statusLabels } from '../utils';
 
 export interface CaseCardProps {
   caseItem: CaseType;
   count: number;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
+  onView: (id: string) => void;
   isEditing: boolean;
+  isSelected: boolean;
 }
 
-const CaseCard = ({ caseItem, count, onDelete, onEdit, isEditing }: CaseCardProps) => {
-  const textClass = 'text-white text-sm truncate';
-  const buttonClass = 'rounded-md py-1 px-3 text-white text-sm cursor-pointer whitespace-nowrap';
+const priorityClass = {
+  critical: 'bg-rose-100 text-rose-700',
+  high: 'bg-orange-100 text-orange-700',
+  medium: 'bg-blue-100 text-blue-700',
+  low: 'bg-emerald-100 text-emerald-700',
+};
 
+const statusClass = {
+  open: 'bg-cyan-100 text-cyan-700',
+  in_progress: 'bg-violet-100 text-violet-700',
+  resolved: 'bg-emerald-100 text-emerald-700',
+  closed: 'bg-slate-200 text-slate-600',
+};
+
+const CaseCard = ({
+  caseItem,
+  count,
+  onDelete,
+  onEdit,
+  onView,
+  isEditing,
+  isSelected,
+}: CaseCardProps) => {
   return (
-    <article className="grid w-full max-w-3xl grid-cols-[48px_minmax(0,1.5fr)_minmax(0,1fr)_auto] items-center gap-4 my-2 rounded-2xl border bg-gray-500 p-4">
-      <div className="flex h-10 w-10 items-center justify-center rounded-md border bg-blue-600 text-sm text-white">
-        {count}
-      </div>
+    <article
+      className={`rounded-3xl border bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl ${
+        isSelected ? 'border-blue-400 ring-4 ring-blue-100' : 'border-slate-200'
+      }`}
+    >
+      <div className="grid gap-4 xl:grid-cols-[44px_minmax(0,1fr)_220px_auto] xl:items-center">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-sm font-black text-white">
+          {count}
+        </div>
 
-      <div className="min-w-0">
-        <p className={textClass}>Title: {caseItem.title}</p>
-        <p className={textClass}>Customer: {caseItem.customerName}</p>
-        {!isEditing ? (
-          <p className={textClass}>Status: {caseItem.status}</p>
-        ) : (
-          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
-        )}
-      </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusClass[caseItem.status]}`}>
+              {statusLabels[caseItem.status]}
+            </span>
+            <span className={`rounded-full px-3 py-1 text-xs font-bold ${priorityClass[caseItem.priority]}`}>
+              {priorityLabels[caseItem.priority]}
+            </span>
+          </div>
 
-      <div className="min-w-0">
-        {!isEditing ? (
-          <p className={textClass}>City: {caseItem.city}</p>
-        ) : (
-          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
-        )}
-        {!isEditing ? (
-          <p className={textClass}>Loss: {caseItem.estimatedLoss}</p>
-        ) : (
-          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="number" />
-        )}
-        {!isEditing ? (
-          <p className={textClass}>Priority: {caseItem.priority}</p>
-        ) : (
-          <input className="border p-0 m-0 text-sm text-ce w-20 rounded-md" type="text" />
-        )}
-      </div>
+          <h3 className="mt-3 truncate text-base font-black text-slate-950">
+            {caseItem.title}
+          </h3>
+          <p className="mt-1 truncate text-sm text-slate-500">
+            {caseItem.customerName} / {caseItem.city}
+          </p>
+        </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        {!isEditing ? (
-          <>
-            <button className={`bg-blue-700 ${buttonClass}`}>View</button>
-            <button onClick={() => onEdit(caseItem.id)} className={`bg-green-700 ${buttonClass}`}>
-              Edit
-            </button>
-            <button onClick={() => onDelete(caseItem.id)} className={`bg-red-700 ${buttonClass}`}>
-              Delete
-            </button>
-          </>
-        ) : (
-          <>
-            <button className={`bg-sky-950 ${buttonClass}`}>Save</button>
-            <button className={`bg-amber-500 ${buttonClass}`}>Cancel</button>
-          </>
-        )}
+        <div className="rounded-2xl bg-slate-50 p-3 text-sm">
+          <p className="font-bold text-slate-950">{formatMoney(caseItem.estimatedLoss)}</p>
+          <p className="mt-1 text-xs text-slate-500">Estimated loss</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
+            type="button"
+            onClick={() => onView(caseItem.id)}
+          >
+            View
+          </button>
+          <button
+            className="rounded-xl border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50"
+            type="button"
+            onClick={() => onEdit(caseItem.id)}
+          >
+            {isEditing ? 'Editing' : 'Edit'}
+          </button>
+          <button
+            className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-50"
+            type="button"
+            onClick={() => onDelete(caseItem.id)}
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </article>
   );

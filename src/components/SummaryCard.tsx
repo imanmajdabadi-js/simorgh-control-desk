@@ -7,11 +7,11 @@ interface SummaryCardProps {
 
 const SummaryCard = ({ summarys }: SummaryCardProps) => {
   return (
-    <div className="grid grid-cols-5 m-2">
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
       {summarys.map((summary) => {
         return <Summary summary={summary} key={summary.id} />;
       })}
-    </div>
+    </section>
   );
 };
 
