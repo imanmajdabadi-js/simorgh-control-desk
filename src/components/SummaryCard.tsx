@@ -1,16 +1,18 @@
-import type { SummaryType } from '../types';
+import type { SummaryItem } from './Summary';
 import Summary from './Summary';
 
+export type { SummaryItem } from './Summary';
+
 interface SummaryCardProps {
-  summarys: SummaryType[];
+  summaries: SummaryItem[];
 }
 
-const SummaryCard = ({ summarys }: SummaryCardProps) => {
+const SummaryCard = ({ summaries }: SummaryCardProps) => {
   return (
-    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-      {summarys.map((summary) => {
-        return <Summary summary={summary} key={summary.id} />;
-      })}
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {summaries.map((summary) => (
+        <Summary key={summary.id} summary={summary} />
+      ))}
     </section>
   );
 };

@@ -1,3 +1,4 @@
+import { Check, X } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import type { CaseType, Category, City, Priority, Status } from '../types';
 import {
@@ -6,11 +7,13 @@ import {
   cityLabels,
   cityOptions,
   getTagsByCategory,
+  normalizeNumberInput,
   priorityLabels,
   priorityOptions,
   statusLabels,
   statusOptions,
 } from '../utils';
+import Button from './Button';
 
 type CaseFormMode = 'add' | 'edit';
 
@@ -51,7 +54,7 @@ const getFormValues = (caseItem: CaseType | null): CaseFormValues => ({
 
 const validateForm = (values: CaseFormValues) => {
   const errors: CaseFormErrors = {};
-  const estimatedLoss = Number(values.estimatedLoss);
+  const estimatedLoss = Number(normalizeNumberInput(values.estimatedLoss));
 
   if (!values.title.trim()) {
     errors.title = 'عنوان پرونده الزامی است.';
@@ -68,13 +71,13 @@ const validateForm = (values: CaseFormValues) => {
   if (!values.estimatedLoss.trim()) {
     errors.estimatedLoss = 'مبلغ ضرر احتمالی الزامی است.';
   } else if (!Number.isFinite(estimatedLoss) || estimatedLoss < 0) {
-    errors.estimatedLoss = 'مبلغ باید عدد معتبر و مثبت باشد.';
+    errors.estimatedLoss = 'مبلغ باید عدد معتبر و صفر یا بیشتر باشد.';
   }
 
   if (!values.description.trim()) {
-    errors.description = 'توضیحات پرونده الزامی است.';
+    errors.description = 'شرح پرونده الزامی است.';
   } else if (values.description.trim().length < 12) {
-    errors.description = 'توضیحات باید کمی کامل‌تر باشد.';
+    errors.description = 'شرح پرونده باید کمی کامل‌تر باشد.';
   }
 
   return errors;
@@ -93,15 +96,22 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
   ) => {
     const { name, value } = event.target;
 
-    setValues((prev) => ({
-      ...prev,
+    setValues((currentValues) => ({
+      ...currentValues,
       [name]: value,
     }));
+
+    if (errors[name as keyof CaseFormErrors]) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [name]: undefined,
+      }));
+    }
   };
 
   const handleEscalatedChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setValues((prev) => ({
-      ...prev,
+    setValues((currentValues) => ({
+      ...currentValues,
       isEscalated: event.target.checked,
     }));
   };
@@ -116,43 +126,42 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
       return;
     }
 
-    const savedCase: CaseType = {
+    onSave({
       ...caseItem,
       assignedTo: values.assignedTo.trim(),
       category: values.category,
       city: values.city,
       customerName: values.customerName.trim(),
       description: values.description.trim(),
-      estimatedLoss: Number(values.estimatedLoss),
+      estimatedLoss: Number(normalizeNumberInput(values.estimatedLoss)),
       isEscalated: values.isEscalated,
       lastUpdatedAt: new Date().toISOString(),
       priority: values.priority,
       status: values.status,
       tags: getTagsByCategory(values.category),
       title: values.title.trim(),
-    };
-
-    onSave(savedCase);
+    });
   };
 
   return (
-    <aside
-      className="h-full rounded-md border border-slate-700/80 bg-slate-900/60 p-5 shadow-[0_18px_70px_rgba(15,23,42,0.22)]"
-      dir="rtl"
-    >
-      <div className="border-b border-slate-700/80 pb-5">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">
-          {mode === 'add' ? 'پرونده جدید' : 'ویرایش پرونده'}
+    <aside className="rounded-panel border border-stroke bg-surface p-5 shadow-panel xl:sticky xl:top-28">
+      <header className="border-b border-stroke-soft pb-5">
+        <p className="text-sm font-bold text-brand">
+          {mode === 'add' ? 'پرونده تازه' : 'ویرایش پرونده'}
         </p>
-        <h2 className="mt-2 text-xl font-black text-white">
-          {mode === 'add' ? 'ثبت مورد عملیاتی' : 'اصلاح جزئیات پرونده'}
+        <h2 className="mt-1 text-2xl font-black text-ink">
+          {mode === 'add' ? 'ثبت مسئله عملیاتی' : 'اصلاح اطلاعات پرونده'}
         </h2>
-      </div>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          اطلاعات ضروری را دقیق و کوتاه ثبت کن.
+        </p>
+      </header>
 
       <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
         <TextField
+          autoFocus
           error={errors.title}
-          label="عنوان"
+          label="عنوان پرونده"
           name="title"
           onChange={handleTextChange}
           value={values.title}
@@ -160,15 +169,15 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
 
         <TextField
           error={errors.customerName}
-          label="مشتری"
+          label="نام مشتری"
           name="customerName"
           onChange={handleTextChange}
           value={values.customerName}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
           <SelectField
-            label="دسته‌بندی"
+            label="نوع سرویس"
             name="category"
             onChange={handleTextChange}
             options={categoryOptions.map((option) => ({
@@ -189,7 +198,7 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
           <SelectField
             label="اولویت"
             name="priority"
@@ -212,61 +221,58 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField
-            label="مسئول"
-            name="assignedTo"
-            onChange={handleTextChange}
-            value={values.assignedTo}
-          />
-          <TextField
-            error={errors.estimatedLoss}
-            label="ضرر احتمالی"
-            name="estimatedLoss"
-            onChange={handleTextChange}
-            value={values.estimatedLoss}
-          />
-        </div>
+        <TextField
+          label="مسئول پیگیری"
+          name="assignedTo"
+          onChange={handleTextChange}
+          value={values.assignedTo}
+        />
+
+        <TextField
+          error={errors.estimatedLoss}
+          inputMode="numeric"
+          label="ضرر احتمالی به تومان"
+          name="estimatedLoss"
+          onChange={handleTextChange}
+          value={values.estimatedLoss}
+        />
 
         <TextareaField
           error={errors.description}
-          label="توضیحات"
+          label="شرح مسئله"
           name="description"
           onChange={handleTextChange}
           value={values.description}
         />
 
-        <label className="flex items-center justify-between gap-4 rounded-md border border-slate-700 bg-[#071528] px-4 py-3">
+        <label className="flex items-center justify-between gap-4 rounded-xl border border-stroke bg-surface-soft px-4 py-3.5">
           <span>
-            <span className="block text-sm font-black text-slate-200">
-              پرونده ارجاع‌شده
+            <span className="block text-sm font-black text-ink-soft">
+              نیازمند توجه مدیر
             </span>
-            <span className="mt-1 block text-xs text-slate-400">
-              وقتی پرونده نیاز به توجه مدیر دارد، این گزینه را فعال کن.
+            <span className="mt-1 block text-xs leading-5 text-muted">
+              برای پرونده‌های خارج از اختیار کارشناس
             </span>
           </span>
           <input
             checked={values.isEscalated}
-            className="h-5 w-5 accent-blue-600"
+            className="h-5 w-5 accent-brand-strong"
             onChange={handleEscalatedChange}
             type="checkbox"
           />
         </label>
 
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-          <button
-            className="h-12 flex-1 rounded-md bg-blue-600 px-5 text-sm font-black text-white shadow-lg shadow-blue-950/40 transition duration-300 hover:-translate-y-0.5 hover:bg-blue-500"
+        <div className="grid gap-3 pt-2 sm:grid-cols-2 xl:grid-cols-1">
+          <Button
+            icon={<Check size={18} />}
             type="submit"
+            variant="primary"
           >
             {mode === 'add' ? 'ثبت پرونده' : 'ذخیره تغییرات'}
-          </button>
-          <button
-            className="h-12 flex-1 rounded-md border border-slate-700 px-5 text-sm font-black text-slate-300 transition hover:border-blue-400 hover:text-blue-300"
-            onClick={onCancel}
-            type="button"
-          >
+          </Button>
+          <Button icon={<X size={18} />} onClick={onCancel} variant="secondary">
             انصراف
-          </button>
+          </Button>
         </div>
       </form>
     </aside>
@@ -274,7 +280,9 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
 };
 
 interface FieldProps {
+  autoFocus?: boolean;
   error?: string;
+  inputMode?: 'text' | 'numeric';
   label: string;
   name: keyof CaseFormValues;
   onChange: (
@@ -283,32 +291,56 @@ interface FieldProps {
   value: string;
 }
 
-const TextField = ({ error, label, name, onChange, value }: FieldProps) => {
+const fieldClassName =
+  'h-12 w-full rounded-control border border-stroke-strong bg-surface-soft px-4 text-body text-ink outline-none transition placeholder:text-muted/75 focus:border-brand focus:bg-surface focus:shadow-focus';
+
+const TextField = ({
+  autoFocus,
+  error,
+  inputMode = 'text',
+  label,
+  name,
+  onChange,
+  value,
+}: FieldProps) => {
   return (
-    <label className="block space-y-2">
-      <span className="text-sm font-bold text-slate-300">{label}</span>
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
       <input
-        className="h-11 w-full rounded-md border border-slate-700 bg-[#071528] px-4 text-sm text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
+        className={fieldClassName}
+        aria-invalid={Boolean(error)}
+        autoFocus={autoFocus}
+        inputMode={inputMode}
         name={name}
         onChange={onChange}
         value={value}
       />
-      {error ? <span className="block text-xs font-bold text-rose-300">{error}</span> : null}
+      {error ? (
+        <span className="mt-1.5 block text-xs font-bold text-danger" role="alert">
+          {error}
+        </span>
+      ) : null}
     </label>
   );
 };
 
-interface SelectFieldProps extends Omit<FieldProps, 'value'> {
+interface SelectFieldProps extends Omit<FieldProps, 'autoFocus' | 'value'> {
   options: { label: string; value: string }[];
   value: string;
 }
 
-const SelectField = ({ label, name, onChange, options, value }: SelectFieldProps) => {
+const SelectField = ({
+  label,
+  name,
+  onChange,
+  options,
+  value,
+}: SelectFieldProps) => {
   return (
-    <label className="block space-y-2">
-      <span className="text-sm font-bold text-slate-300">{label}</span>
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
       <select
-        className="h-11 w-full rounded-md border border-slate-700 bg-[#071528] px-4 text-sm text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
+        className={fieldClassName}
         name={name}
         onChange={onChange}
         value={value}
@@ -323,17 +355,28 @@ const SelectField = ({ label, name, onChange, options, value }: SelectFieldProps
   );
 };
 
-const TextareaField = ({ error, label, name, onChange, value }: FieldProps) => {
+const TextareaField = ({
+  error,
+  label,
+  name,
+  onChange,
+  value,
+}: FieldProps) => {
   return (
-    <label className="block space-y-2">
-      <span className="text-sm font-bold text-slate-300">{label}</span>
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
       <textarea
-        className="min-h-28 w-full resize-none rounded-md border border-slate-700 bg-[#071528] px-4 py-3 text-sm leading-6 text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
+        className="min-h-32 w-full resize-y rounded-control border border-stroke-strong bg-surface-soft px-4 py-3 text-body text-ink outline-none transition focus:border-brand focus:bg-surface focus:shadow-focus"
+        aria-invalid={Boolean(error)}
         name={name}
         onChange={onChange}
         value={value}
       />
-      {error ? <span className="block text-xs font-bold text-rose-300">{error}</span> : null}
+      {error ? (
+        <span className="mt-1.5 block text-xs font-bold text-danger" role="alert">
+          {error}
+        </span>
+      ) : null}
     </label>
   );
 };

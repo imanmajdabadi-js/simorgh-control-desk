@@ -1,15 +1,25 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  CircleDollarSign,
+  ClipboardList,
+  FolderClock,
+} from 'lucide-react';
+import { useEffect, useReducer, useState } from 'react';
+import { toast } from 'sonner';
 import { initialCases } from '../data/data';
+import { caseReducer } from '../reducers/caseReducer';
 import { loadCases, saveCases } from '../services';
-import type { CaseFilters, CaseType, Status, SummaryType } from '../types';
-import { filterCases, formatMoney, getCaseStats } from '../utils';
+import type { CaseFilters, CaseType, Status } from '../types';
+import { createDraftCase, filterCases, formatMoney, getCaseStats } from '../utils';
 import CaseDetail from './CaseDetail';
 import CaseForm from './CaseForm';
 import CaseList from './CaseList';
+import ConfirmDialog from './ConfirmDialog';
 import Filters from './Filters';
 import Header from './Header';
-import SummaryCard from './SummaryCard';
-import Toast, { type ToastMessage } from './Toast';
+import OperationsBrief from './OperationsBrief';
+import Pagination from './Pagination';
+import SummaryCard, { type SummaryItem } from './SummaryCard';
 
 const initialFilters: CaseFilters = {
   status: 'all',
@@ -21,129 +31,81 @@ const initialFilters: CaseFilters = {
 
 type FormMode = 'add' | 'edit' | null;
 
+type Confirmation =
+  | { type: 'delete'; caseItem: CaseType }
+  | { type: 'reset' }
+  | null;
+
+const PAGE_SIZE = 5;
+
 const Dashboard = () => {
-  const [caseList, setCaseList] = useState<CaseType[]>(() => loadCases(initialCases));
+  const [caseList, dispatch] = useReducer(caseReducer, initialCases, loadCases);
   const [formMode, setFormMode] = useState<FormMode>(null);
   const [caseFormItem, setCaseFormItem] = useState<CaseType | null>(null);
   const [filters, setFilters] = useState<CaseFilters>(initialFilters);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCaseId, setSelectedCaseId] = useState(
-    () => loadCases(initialCases)[0]?.id || '',
-  );
-  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [selectedCaseId, setSelectedCaseId] = useState(() => caseList[0]?.id || '');
+  const [confirmation, setConfirmation] = useState<Confirmation>(null);
 
-  const visibleCases = useMemo(() => filterCases(caseList, filters), [caseList, filters]);
-  const stats = useMemo(() => getCaseStats(caseList), [caseList]);
-  const pageSize = 5;
-  const pageCount = Math.max(1, Math.ceil(visibleCases.length / pageSize));
+  const visibleCases = filterCases(caseList, filters);
+  const stats = getCaseStats(caseList);
+  const pageCount = Math.max(1, Math.ceil(visibleCases.length / PAGE_SIZE));
   const activePage = Math.min(currentPage, pageCount);
-  const firstCaseIndex = (activePage - 1) * pageSize;
+  const firstCaseIndex = (activePage - 1) * PAGE_SIZE;
   const firstVisibleCase = visibleCases.length === 0 ? 0 : firstCaseIndex + 1;
-  const pageCases = visibleCases.slice(firstCaseIndex, firstCaseIndex + pageSize);
-  const selectedCase = caseList.find((caseItem) => caseItem.id === selectedCaseId) || null;
+  const lastVisibleCase = Math.min(
+    firstCaseIndex + PAGE_SIZE,
+    visibleCases.length,
+  );
+  const pageCases = visibleCases.slice(firstCaseIndex, firstCaseIndex + PAGE_SIZE);
+  const selectedCase =
+    caseList.find((caseItem) => caseItem.id === selectedCaseId) || null;
   const editingCaseId = formMode === 'edit' ? caseFormItem?.id || null : null;
 
   useEffect(() => {
     saveCases(caseList);
   }, [caseList]);
 
-  useEffect(() => {
-    if (!toast) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => setToast(null), 2800);
-
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
-  const summaryItems: SummaryType[] = [
+  const summaryItems: SummaryItem[] = [
     {
       id: 'total',
       title: 'کل پرونده‌ها',
       value: stats.totalCases.toString(),
-      caption: 'همه موارد ثبت‌شده عملیاتی',
+      caption: 'همه موارد ثبت‌شده',
       accent: 'blue',
-      icon: '▤',
+      icon: ClipboardList,
     },
     {
       id: 'open',
-      title: 'پرونده‌های باز',
+      title: 'نیازمند پیگیری',
       value: stats.openCases.toString(),
-      caption: 'مواردی که هنوز نیاز به اقدام دارند',
+      caption: 'پرونده‌های باز',
       accent: 'green',
-      icon: '↗',
+      icon: FolderClock,
     },
     {
       id: 'priority',
-      title: 'بحرانی',
+      title: 'اولویت بحرانی',
       value: stats.criticalCases.toString(),
-      caption: 'مواردی که باید زودتر دیده شوند',
+      caption: 'نیازمند اقدام فوری',
       accent: 'rose',
-      icon: '!',
+      icon: AlertTriangle,
     },
     {
       id: 'loss',
-      title: 'ضرر احتمالی',
+      title: 'ریسک مالی',
       value: formatMoney(stats.totalLoss),
-      caption: 'جمع اثر مالی پرونده‌ها',
-      accent: 'blue',
-      icon: '$',
-    },
-    {
-      id: 'escalated',
-      title: 'ارجاع‌شده',
-      value: stats.escalatedCases.toString(),
-      caption: 'پرونده‌های نیازمند توجه مدیر',
-      accent: 'violet',
-      icon: '↑',
+      caption: 'جمع ریسک پرونده‌های فعال',
+      accent: 'gold',
+      icon: CircleDollarSign,
     },
   ];
 
-  const showToast = (message: ToastMessage) => {
-    setToast(message);
-  };
-
-  const createDraftCase = (): CaseType => {
-    const lastId = Math.max(0, ...caseList.map((caseItem) => Number(caseItem.id)));
-    const now = new Date().toISOString();
-
-    return {
-      id: String(lastId + 1),
-      title: '',
-      customerName: '',
-      category: 'support',
-      city: 'Tehran',
-      priority: 'medium',
-      status: 'open',
-      assignedTo: '',
-      estimatedLoss: 0,
-      createdAt: now,
-      lastUpdatedAt: now,
-      description: '',
-      tags: ['support'],
-      isEscalated: false,
-    };
-  };
-
-  const handleDelete = (id: string) => {
-    const nextCases = caseList.filter((item) => item.id !== id);
-    setCaseList(nextCases);
-
-    if (selectedCaseId === id) {
-      setSelectedCaseId(nextCases[0]?.id || '');
-    }
-
-    if (caseFormItem?.id === id) {
-      setCaseFormItem(null);
-      setFormMode(null);
-    }
-
-    showToast({
-      title: 'پرونده حذف شد',
-      text: 'مورد انتخاب‌شده از میز عملیات حذف شد.',
-      tone: 'danger',
-    });
+  const handleAddCase = () => {
+    setFormMode('add');
+    setCaseFormItem(createDraftCase(caseList));
+    setSelectedCaseId('');
+    setCurrentPage(1);
   };
 
   const handleEdit = (id: string) => {
@@ -158,53 +120,84 @@ const Dashboard = () => {
     setSelectedCaseId(id);
   };
 
-  const handleStatusChange = (id: string, status: Status) => {
-    const now = new Date().toISOString();
+  const handleRequestDelete = (id: string) => {
+    const caseToDelete = caseList.find((caseItem) => caseItem.id === id);
 
-    setCaseList((prev) =>
-      prev.map((caseItem) =>
-        caseItem.id === id ? { ...caseItem, status, lastUpdatedAt: now } : caseItem,
-      ),
-    );
-
-    setCaseFormItem((prev) =>
-      prev?.id === id ? { ...prev, status, lastUpdatedAt: now } : prev,
-    );
-
-    showToast({
-      title: 'وضعیت تغییر کرد',
-      text: 'وضعیت پرونده بدون باز کردن فرم کامل به‌روزرسانی شد.',
-      tone: 'info',
-    });
+    if (caseToDelete) {
+      setConfirmation({ type: 'delete', caseItem: caseToDelete });
+    }
   };
 
-  const handleAddCase = () => {
-    const draftCase = createDraftCase();
+  const handleConfirmAction = () => {
+    if (confirmation?.type === 'delete') {
+      const deletedCase = confirmation.caseItem;
+      const nextCases = caseList.filter((caseItem) => caseItem.id !== deletedCase.id);
 
-    setFormMode('add');
-    setCaseFormItem(draftCase);
-    setSelectedCaseId('');
-    setCurrentPage(1);
+      dispatch({ type: 'DELETE_CASE', id: deletedCase.id });
+
+      if (selectedCaseId === deletedCase.id) {
+        setSelectedCaseId(nextCases[0]?.id || '');
+      }
+
+      if (caseFormItem?.id === deletedCase.id) {
+        setCaseFormItem(null);
+        setFormMode(null);
+      }
+
+      toast.success('پرونده حذف شد', {
+        description: `پرونده «${deletedCase.title}» از میز عملیات حذف شد.`,
+      });
+    }
+
+    if (confirmation?.type === 'reset') {
+      dispatch({ type: 'RESET_CASES', cases: initialCases });
+      setSelectedCaseId(initialCases[0]?.id || '');
+      setCaseFormItem(null);
+      setFormMode(null);
+      setFilters(initialFilters);
+      setCurrentPage(1);
+
+      toast.info('داده‌های نمونه بازگردانده شدند', {
+        description: 'همه تغییرات محلی پاک شدند.',
+      });
+    }
+
+    setConfirmation(null);
+  };
+
+  const handleStatusChange = (id: string, status: Status) => {
+    const updatedAt = new Date().toISOString();
+
+    dispatch({
+      type: 'CHANGE_STATUS',
+      id,
+      status,
+      updatedAt,
+    });
+
+    setCaseFormItem((currentItem) =>
+      currentItem?.id === id
+        ? { ...currentItem, status, lastUpdatedAt: updatedAt }
+        : currentItem,
+    );
+
+    toast.info('وضعیت پرونده تغییر کرد', {
+      description: 'تغییر جدید در مرورگر ذخیره شد.',
+    });
   };
 
   const handleSaveCase = (savedCase: CaseType) => {
     if (formMode === 'add') {
-      setCaseList((prev) => [savedCase, ...prev]);
-      showToast({
-        title: 'پرونده ثبت شد',
-        text: 'مورد جدید به لیست عملیات اضافه شد.',
-        tone: 'success',
+      dispatch({ type: 'ADD_CASE', caseItem: savedCase });
+      toast.success('پرونده جدید ثبت شد', {
+        description: 'پرونده به ابتدای صف پیگیری اضافه شد.',
       });
     }
 
     if (formMode === 'edit') {
-      setCaseList((prev) =>
-        prev.map((caseItem) => (caseItem.id === savedCase.id ? savedCase : caseItem)),
-      );
-      showToast({
-        title: 'پرونده به‌روزرسانی شد',
-        text: 'جزئیات پرونده با موفقیت اصلاح شد.',
-        tone: 'success',
+      dispatch({ type: 'UPDATE_CASE', caseItem: savedCase });
+      toast.success('تغییرات ذخیره شد', {
+        description: 'اطلاعات پرونده با موفقیت به‌روزرسانی شد.',
       });
     }
 
@@ -219,134 +212,82 @@ const Dashboard = () => {
     setFormMode(null);
   };
 
-  const handleResetCases = () => {
-    setCaseList(initialCases);
-    setSelectedCaseId(initialCases[0]?.id || '');
-    setCaseFormItem(null);
-    setFormMode(null);
-    setFilters(initialFilters);
+  const handleFilterChange = (nextFilters: CaseFilters) => {
+    setFilters(nextFilters);
     setCurrentPage(1);
-
-    showToast({
-      title: 'داده‌ها بازنشانی شد',
-      text: 'پرونده‌های نمونه دوباره در مرورگر ذخیره شدند.',
-      tone: 'info',
-    });
   };
 
+  const handleResetFilters = () => {
+    setFilters(initialFilters);
+    setCurrentPage(1);
+  };
+
+  const handleShowCriticalCases = () => {
+    setFilters({
+      ...initialFilters,
+      priority: 'critical',
+    });
+    setCurrentPage(1);
+    setSelectedCaseId('');
+  };
+
+  const isDeleteConfirmation = confirmation?.type === 'delete';
+
   return (
-    <div
-      className="min-h-screen bg-[#020b1c] bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_28%)] text-slate-100"
-      dir="ltr"
-    >
+    <div className="min-h-screen text-ink" dir="rtl">
       <Header
-        totalCases={caseList.length}
         onAddCase={handleAddCase}
-        onResetCases={handleResetCases}
+        onResetCases={() => setConfirmation({ type: 'reset' })}
+        totalCases={caseList.length}
       />
 
-      <main className="mx-auto flex max-w-[1480px] flex-col gap-4 px-5 py-4">
-        <SummaryCard summarys={summaryItems} />
+      <main className="mx-auto flex max-w-control flex-col gap-5 px-4 py-5 sm:px-6 sm:py-7">
+        <OperationsBrief
+          criticalCases={stats.criticalCases}
+          escalatedCases={stats.escalatedCases}
+          onShowCritical={handleShowCriticalCases}
+          unassignedCases={stats.unassignedCases}
+        />
 
-        <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_470px]">
-          <Filters
-            filters={filters}
-            onChange={(nextFilters) => {
-              setFilters(nextFilters);
-              setCurrentPage(1);
-            }}
-            onReset={() => {
-              setFilters(initialFilters);
-              setCurrentPage(1);
-            }}
-          />
+        <SummaryCard summaries={summaryItems} />
 
-          <div
-            className="min-w-0 rounded-md border border-slate-700/80 bg-slate-900/60 p-4 shadow-[0_18px_70px_rgba(15,23,42,0.22)]"
-            dir="rtl"
-          >
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Filters
+          filters={filters}
+          onChange={handleFilterChange}
+          onReset={handleResetFilters}
+        />
+
+        <section className="workspace-grid">
+          <section className="min-w-0 rounded-panel border border-stroke bg-surface p-4 shadow-panel sm:p-6">
+            <header className="mb-5 flex flex-col gap-3 border-b border-stroke-soft pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-xl font-black text-white">لیست پرونده‌ها</h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  نمایش {firstVisibleCase}-{Math.min(firstCaseIndex + pageSize, visibleCases.length)} از{' '}
-                  {visibleCases.length} پرونده
-                </p>
+                <p className="text-sm font-bold text-brand">صف پیگیری عملیات</p>
+                <h2 className="mt-1 text-2xl font-black tracking-tight text-ink">
+                  پرونده‌های خدمات سفر
+                </h2>
               </div>
-              <div className="flex gap-2">
-                <button
-                  className="grid h-10 w-12 place-items-center rounded-md border border-blue-500/60 bg-blue-500/10 text-blue-300"
-                  type="button"
-                >
-                  ☰
-                </button>
-                <button
-                  className="grid h-10 w-12 place-items-center rounded-md border border-slate-700 bg-slate-950/40 text-slate-300"
-                  type="button"
-                >
-                  ≡
-                </button>
-              </div>
-            </div>
+              <p className="text-sm leading-6 text-muted">
+                نمایش {firstVisibleCase} تا {lastVisibleCase} از {visibleCases.length}{' '}
+                پرونده
+              </p>
+            </header>
 
             <CaseList
-              editingCaseId={editingCaseId}
-              selectedCaseId={selectedCaseId}
-              onEdit={handleEdit}
-              onView={setSelectedCaseId}
-              onDelete={handleDelete}
-              onStatusChange={handleStatusChange}
               cases={pageCases}
+              editingCaseId={editingCaseId}
+              onDelete={handleRequestDelete}
+              onEdit={handleEdit}
+              onStatusChange={handleStatusChange}
+              onView={setSelectedCaseId}
+              selectedCaseId={selectedCaseId}
             />
 
-            <div
-              className="mt-5 flex items-center justify-center gap-2 text-sm text-slate-400"
-              dir="ltr"
-            >
-              <button
-                className="grid h-9 w-9 place-items-center rounded-md border border-slate-700 text-slate-300 transition hover:border-blue-400 hover:text-blue-300"
-                type="button"
-                onClick={() => setCurrentPage(Math.max(1, activePage - 1))}
-              >
-                ‹
-              </button>
-              {Array.from({ length: Math.min(pageCount, 3) }).map((_, index) => {
-                const pageNumber = index + 1;
-
-                return (
-                  <button
-                    className={`grid h-9 w-9 place-items-center rounded-md transition ${
-                      activePage === pageNumber
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-950/40'
-                        : 'border border-slate-700 text-slate-300 hover:border-blue-400'
-                    }`}
-                    key={pageNumber}
-                    type="button"
-                    onClick={() => setCurrentPage(pageNumber)}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
-              {pageCount > 3 ? <span className="px-3">...</span> : null}
-              {pageCount > 3 ? (
-                <button
-                  className="grid h-9 w-9 place-items-center rounded-md border border-slate-700 text-slate-300 transition hover:border-blue-400"
-                  type="button"
-                  onClick={() => setCurrentPage(pageCount)}
-                >
-                  {pageCount}
-                </button>
-              ) : null}
-              <button
-                className="grid h-9 w-9 place-items-center rounded-md border border-slate-700 text-slate-300 transition hover:border-blue-400 hover:text-blue-300"
-                type="button"
-                onClick={() => setCurrentPage(Math.min(pageCount, activePage + 1))}
-              >
-                ›
-              </button>
-            </div>
-          </div>
+            <Pagination
+              currentPage={activePage}
+              onChange={setCurrentPage}
+              pageCount={pageCount}
+            />
+          </section>
 
           {formMode ? (
             <CaseForm
@@ -366,7 +307,19 @@ const Dashboard = () => {
         </section>
       </main>
 
-      <Toast message={toast} />
+      <ConfirmDialog
+        confirmLabel={isDeleteConfirmation ? 'حذف پرونده' : 'بازنشانی داده‌ها'}
+        description={
+          isDeleteConfirmation
+            ? `پرونده «${confirmation.caseItem.title}» برای همیشه از داده‌های محلی حذف می‌شود.`
+            : 'همه تغییرات محلی پاک می‌شوند و پرونده‌های نمونه اولیه دوباره برمی‌گردند.'
+        }
+        isOpen={confirmation !== null}
+        onCancel={() => setConfirmation(null)}
+        onConfirm={handleConfirmAction}
+        title={isDeleteConfirmation ? 'حذف این پرونده؟' : 'بازنشانی داده‌ها؟'}
+        tone={isDeleteConfirmation ? 'danger' : 'warning'}
+      />
     </div>
   );
 };

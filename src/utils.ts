@@ -20,9 +20,9 @@ export const cityOptions: City[] = [
   'Yazd',
 ];
 export const categoryOptions: Category[] = [
-  'travel',
+  'booking',
   'payment',
-  'delivery',
+  'transfer',
   'refund',
   'support',
 ];
@@ -61,18 +61,18 @@ export const cityLabels: Record<City, string> = {
 };
 
 export const categoryLabels: Record<Category, string> = {
-  travel: 'سفر',
+  booking: 'رزرو',
   payment: 'پرداخت',
-  delivery: 'تحویل',
+  transfer: 'انتقال فرودگاهی',
   refund: 'بازپرداخت',
   support: 'پشتیبانی',
 };
 
 export function getTagsByCategory(category: Category): CaseType['tags'] {
   const tagsByCategory: Record<Category, CaseType['tags']> = {
-    travel: ['flight', 'booking'],
+    booking: ['flight', 'booking'],
     payment: ['payment', 'order'],
-    delivery: ['delivery', 'address'],
+    transfer: ['airport', 'address'],
     refund: ['refund'],
     support: ['support'],
   };
@@ -88,8 +88,56 @@ export function formatMoney(value: number) {
   return `${formattedValue} تومان`;
 }
 
+export function normalizeNumberInput(value: string) {
+  const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+  const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+
+  return value
+    .replace(/[۰-۹]/g, (digit) => String(persianDigits.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String(arabicDigits.indexOf(digit)))
+    .replace(/[,\u066c\s]/g, '');
+}
+
+export function normalizeSearchText(value: string) {
+  const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+  const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[۰-۹]/g, (digit) => String(persianDigits.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String(arabicDigits.indexOf(digit)))
+    .replace(/ي/g, 'ی')
+    .replace(/ك/g, 'ک');
+}
+
+export function createDraftCase(cases: CaseType[]): CaseType {
+  const numericIds = cases
+    .map((caseItem) => Number(caseItem.id))
+    .filter((id) => Number.isFinite(id));
+  const lastId = Math.max(0, ...numericIds);
+  const now = new Date().toISOString();
+
+  return {
+    id: String(lastId + 1),
+    title: '',
+    customerName: '',
+    category: 'support',
+    city: 'Tehran',
+    priority: 'medium',
+    status: 'open',
+    assignedTo: '',
+    estimatedLoss: 0,
+    createdAt: now,
+    lastUpdatedAt: now,
+    description: '',
+    tags: ['support'],
+    isEscalated: false,
+  };
+}
+
 export function filterCases(cases: CaseType[], filters: CaseFilters) {
-  const searchText = filters.search.trim().toLowerCase();
+  const searchText = normalizeSearchText(filters.search);
   const priorityWeight: Record<Priority, number> = {
     critical: 4,
     high: 3,
@@ -102,11 +150,22 @@ export function filterCases(cases: CaseType[], filters: CaseFilters) {
     const matchPriority =
       filters.priority === 'all' || caseItem.priority === filters.priority;
     const matchCity = filters.city === 'all' || caseItem.city === filters.city;
-    const matchSearch =
-      !searchText ||
-      `${caseItem.title} ${caseItem.customerName} ${caseItem.city} ${caseItem.category} ${caseItem.tags.join(' ')}`
-        .toLowerCase()
-        .includes(searchText);
+    const caseCode = `SC-${1040 + Number(caseItem.id)}`;
+    const searchableText = normalizeSearchText(
+      [
+        caseCode,
+        caseItem.title,
+        caseItem.customerName,
+        caseItem.assignedTo,
+        caseItem.description,
+        cityLabels[caseItem.city],
+        categoryLabels[caseItem.category],
+        statusLabels[caseItem.status],
+        priorityLabels[caseItem.priority],
+        caseItem.tags.join(' '),
+      ].join(' '),
+    );
+    const matchSearch = !searchText || searchableText.includes(searchText);
 
     return matchStatus && matchPriority && matchCity && matchSearch;
   });
@@ -145,43 +204,35 @@ export function getCaseStats(cases: CaseType[]) {
       totalCases: 0,
       openCases: 0,
       criticalCases: 0,
-      highPriorityCases: 0,
       escalatedCases: 0,
       unassignedCases: 0,
       totalLoss: 0,
-      averageLoss: 0,
-      newThisWeek: 0,
     };
   }
 
-  const openCases = cases.filter((caseItem) => caseItem.status === 'open').length;
-  const criticalCases = cases.filter((caseItem) => caseItem.priority === 'critical').length;
-  const highPriorityCases = cases.filter(
-    (caseItem) => caseItem.priority === 'high' || caseItem.priority === 'critical',
-  ).length;
-  const escalatedCases = cases.filter((caseItem) => caseItem.isEscalated).length;
-  const unassignedCases = cases.filter((caseItem) => !caseItem.assignedTo.trim()).length;
-  const newestCaseTime = Math.max(
-    ...cases.map((caseItem) => new Date(caseItem.createdAt).getTime()),
+  const activeCases = cases.filter(
+    (caseItem) => caseItem.status === 'open' || caseItem.status === 'in_progress',
   );
-  const newThisWeek = cases.filter((caseItem) => {
-    const createdAt = new Date(caseItem.createdAt).getTime();
-    const weekInMs = 7 * 24 * 60 * 60 * 1000;
-
-    return newestCaseTime - createdAt < weekInMs;
-  }).length;
-  const totalLoss = cases.reduce((sum, caseItem) => sum + caseItem.estimatedLoss, 0);
-  const averageLoss = totalLoss / cases.length;
+  const criticalCases = activeCases.filter(
+    (caseItem) => caseItem.priority === 'critical',
+  ).length;
+  const escalatedCases = activeCases.filter(
+    (caseItem) => caseItem.isEscalated,
+  ).length;
+  const unassignedCases = activeCases.filter(
+    (caseItem) => !caseItem.assignedTo.trim(),
+  ).length;
+  const totalLoss = activeCases.reduce(
+    (sum, caseItem) => sum + caseItem.estimatedLoss,
+    0,
+  );
 
   return {
     totalCases: cases.length,
-    openCases,
+    openCases: activeCases.length,
     criticalCases,
-    highPriorityCases,
     escalatedCases,
     unassignedCases,
     totalLoss,
-    averageLoss,
-    newThisWeek,
   };
 }

@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# Simorgh Control Desk
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+میز کنترل سیمرغ یک رابط فارسی برای مدیریت پرونده‌های عملیاتی یک پلتفرم سفر است. کارشناس عملیات می‌تواند پرونده‌های مربوط به رزرو، پرداخت، انتقال فرودگاهی، بازپرداخت و پشتیبانی را ببیند، فیلتر کند و به‌روزرسانی کند.
 
-Currently, two official plugins are available:
+## مسئله محصول
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+وقتی یک سرویس سفر دچار اختلال می‌شود، اطلاعات مشتری، اولویت، مسئول پیگیری و اثر مالی نباید بین پیام‌ها و فایل‌های پراکنده باقی بماند. این پروژه یک نمای متمرکز و ساده برای پیگیری این پرونده‌ها فراهم می‌کند.
 
-## React Compiler
+## قابلیت‌های فعلی
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- مشاهده خلاصه وضعیت عملیات
+- جستجو، فیلتر و مرتب‌سازی پرونده‌ها
+- ایجاد و ویرایش پرونده
+- تغییر سریع وضعیت
+- مشاهده جزئیات مشتری و اثر مالی
+- تأیید اختصاصی برای عملیات حذف و بازنشانی
+- اعلان نتیجه عملیات بدون توقف جریان کار
+- نگه‌داری داده‌های نمونه در مرورگر
+- رابط فارسی و واکنش‌گرا
 
-## Expanding the ESLint configuration
+## جریان اصلی
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+ورود کاربر
+→ بارگذاری پرونده‌های ذخیره‌شده
+→ فیلتر یا انتخاب پرونده
+→ ایجاد، ویرایش یا تغییر وضعیت
+→ ارسال رویداد به reducer پرونده‌ها
+→ ساخت state جدید
+→ ذخیره دوباره در localStorage
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## فناوری‌ها
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Vazirmatn
+- Lucide
+- Sonner
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## اجرای محلی
+
+```bash
+npm install
+npm run dev
 ```
+
+کنترل کیفیت:
+
+```bash
+npm run lint
+npm run build
+```
+
+## ساختار اصلی
+
+```text
+src/
+├── components/   رابط و جریان‌های کاربر
+├── data/         داده نمونه
+├── reducers/     قوانین تغییر فهرست پرونده‌ها
+├── services/     مرز ذخیره‌سازی
+├── types/        مدل داده
+├── utils.ts      فیلتر، آمار و تبدیل داده
+└── App.tsx       نقطه ورود رابط
+```
+
+## محدودیت‌های فعلی
+
+- داده‌ها فقط در مرورگر همان دستگاه ذخیره می‌شوند.
+- پروژه هنوز به سرویس واقعی متصل نیست.
+- بخش سابقه، فقط زمان ایجاد و آخرین تغییر را نمایش می‌دهد و تاریخچه کامل رویدادها نیست.
+- قوانین انتقال وضعیت و آزمون‌های بیزینسی در فاز بعد تکمیل می‌شوند.
+
+تعریف دقیق محصول در
+
+[`docs/project-brief.md`](docs/project-brief.md)
+
+قرار دارد.

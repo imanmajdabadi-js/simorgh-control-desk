@@ -1,6 +1,6 @@
 import type { CaseType } from '../types';
 
-const STORAGE_KEY = 'simorgh-control-desk-cases-v2';
+const STORAGE_KEY = 'simorgh-control-desk-cases-v3';
 
 export function loadCases(fallbackCases: CaseType[]) {
   const savedCases = localStorage.getItem(STORAGE_KEY);

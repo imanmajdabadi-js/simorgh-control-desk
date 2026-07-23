@@ -1,3 +1,4 @@
+import { Filter, RotateCcw, Search } from 'lucide-react';
 import type { CaseFilters, CaseSort, City, Priority, Status } from '../types';
 import {
   cityLabels,
@@ -8,6 +9,7 @@ import {
   statusLabels,
   statusOptions,
 } from '../utils';
+import Button from './Button';
 
 interface FiltersProps {
   filters: CaseFilters;
@@ -16,108 +18,136 @@ interface FiltersProps {
 }
 
 const Filters = ({ filters, onChange, onReset }: FiltersProps) => {
-  const activeFilters = [filters.status, filters.priority, filters.city].filter(
-    (filter) => filter !== 'all',
-  ).length;
+  const selectedFilterCount = [
+    filters.status,
+    filters.priority,
+    filters.city,
+  ].filter((filter) => filter !== 'all').length;
+  const activeFilters =
+    selectedFilterCount +
+    Number(Boolean(filters.search.trim())) +
+    Number(filters.sort !== 'newest');
 
   return (
-    <aside
-      className="h-full rounded-md border border-slate-700/80 bg-slate-900/60 p-5 shadow-[0_18px_70px_rgba(15,23,42,0.22)]"
-      dir="rtl"
-    >
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-black text-white">فیلترها</h2>
+    <section className="rounded-panel border border-stroke bg-surface p-4 shadow-panel sm:p-5">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-blue-50 text-brand">
+            <Filter size={21} />
+          </span>
+          <div>
+            <h2 className="text-lg font-black text-ink">جستجو و پالایش پرونده‌ها</h2>
+            <p className="mt-0.5 text-sm text-muted">
+              {activeFilters === 0
+                ? 'همه پرونده‌ها نمایش داده می‌شوند'
+                : `${activeFilters} انتخاب فعال است`}
+            </p>
+          </div>
         </div>
-        <button
-          className="rounded-md border border-slate-700 px-3 py-1 text-xs font-bold text-slate-400 transition hover:border-blue-400 hover:text-blue-300"
-          type="button"
-          onClick={onReset}
-        >
-          پاک کردن
-        </button>
-      </div>
 
-      <div className="space-y-4">
-        <label className="block space-y-2">
-          <span className="text-sm font-bold text-slate-300">جستجو</span>
+        <Button
+          disabled={activeFilters === 0}
+          icon={<RotateCcw size={17} />}
+          onClick={onReset}
+          size="sm"
+          variant="ghost"
+        >
+          پاک‌کردن فیلترها
+        </Button>
+      </header>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        <label className="relative block xl:col-span-2">
+          <span className="mb-2 block text-sm font-bold text-ink-soft">جستجو</span>
+          <Search
+            className="pointer-events-none absolute bottom-3.5 right-4 text-muted"
+            size={19}
+          />
           <input
-            className="h-11 w-full rounded-md border border-slate-700 bg-[#071528] px-4 text-sm text-slate-200 outline-none transition placeholder:text-slate-500 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
-            placeholder="جستجو در پرونده‌ها..."
+            className="h-12 w-full rounded-control border border-stroke-strong bg-surface-soft pe-4 ps-11 text-body text-ink outline-none transition placeholder:text-muted/75 focus:border-brand focus:bg-surface focus:shadow-focus"
+            onChange={(event) =>
+              onChange({ ...filters, search: event.target.value })
+            }
+            placeholder="عنوان، مشتری یا برچسب"
+            type="search"
             value={filters.search}
-            onChange={(event) => onChange({ ...filters, search: event.target.value })}
           />
         </label>
 
         <FilterSelect
           label="وضعیت"
-          value={filters.status}
+          onChange={(value) =>
+            onChange({ ...filters, status: value as Status | 'all' })
+          }
           options={statusOptions.map((option) => ({
             label: statusLabels[option],
             value: option,
           }))}
-          onChange={(value) => onChange({ ...filters, status: value as Status | 'all' })}
+          value={filters.status}
         />
+
         <FilterSelect
           label="اولویت"
-          value={filters.priority}
+          onChange={(value) =>
+            onChange({ ...filters, priority: value as Priority | 'all' })
+          }
           options={priorityOptions.map((option) => ({
             label: priorityLabels[option],
             value: option,
           }))}
-          onChange={(value) => onChange({ ...filters, priority: value as Priority | 'all' })}
+          value={filters.priority}
         />
+
         <FilterSelect
           label="شهر"
-          value={filters.city}
+          onChange={(value) =>
+            onChange({ ...filters, city: value as City | 'all' })
+          }
           options={cityOptions.map((option) => ({
             label: cityLabels[option],
             value: option,
           }))}
-          onChange={(value) => onChange({ ...filters, city: value as City | 'all' })}
+          value={filters.city}
         />
 
-        <label className="block space-y-2">
-          <span className="text-sm font-bold text-slate-300">مرتب‌سازی</span>
-          <select
-            className="h-11 w-full rounded-md border border-slate-700 bg-[#071528] px-4 text-sm text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
-            value={filters.sort}
-            onChange={(event) => onChange({ ...filters, sort: event.target.value as CaseSort })}
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="flex items-center gap-2 pt-3 text-sm text-blue-300">
-          <span className="h-2 w-2 rounded-full bg-blue-400" />
-          {activeFilters} فیلتر فعال
-        </div>
+        <FilterSelect
+          label="مرتب‌سازی"
+          onChange={(value) =>
+            onChange({ ...filters, sort: value as CaseSort })
+          }
+          options={sortOptions}
+          showAllOption={false}
+          value={filters.sort}
+        />
       </div>
-    </aside>
+    </section>
   );
 };
 
 interface FilterSelectProps {
   label: string;
-  value: string;
-  options: { label: string; value: string }[];
   onChange: (value: string) => void;
+  options: { label: string; value: string }[];
+  showAllOption?: boolean;
+  value: string;
 }
 
-const FilterSelect = ({ label, value, options, onChange }: FilterSelectProps) => {
+const FilterSelect = ({
+  label,
+  onChange,
+  options,
+  showAllOption = true,
+  value,
+}: FilterSelectProps) => {
   return (
-    <label className="block space-y-2">
-      <span className="text-sm font-bold text-slate-300">{label}</span>
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
       <select
-        className="h-11 w-full rounded-md border border-slate-700 bg-[#071528] px-4 text-sm text-slate-200 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
-        value={value}
+        className="h-12 w-full rounded-control border border-stroke-strong bg-surface-soft px-3 text-body text-ink outline-none transition focus:border-brand focus:bg-surface focus:shadow-focus"
         onChange={(event) => onChange(event.target.value)}
+        value={value}
       >
-        <option value="all">همه</option>
+        {showAllOption ? <option value="all">همه</option> : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

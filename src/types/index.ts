@@ -20,7 +20,6 @@ type CaseTag =
   | 'airport'
   | 'delay'
   | 'address'
-  | 'delivery'
   | 'flight'
   | 'pricing'
   | 'refund'
@@ -36,22 +35,13 @@ type CaseTag =
   | 'order'
   | 'bug';
 
-export type Category = 'travel' | 'payment' | 'delivery' | 'refund' | 'support';
+export type Category = 'booking' | 'payment' | 'transfer' | 'refund' | 'support';
 
 export type Priority = 'high' | 'critical' | 'medium' | 'low';
 
 export type City = 'Tehran' | 'Shiraz' | 'Mashhad' | 'Tabriz' | 'Isfahan' | 'Rasht' | 'Yazd';
 
 export type Status = 'open' | 'in_progress' | 'resolved' | 'closed';
-
-export interface SummaryType {
-  accent: 'blue' | 'green' | 'orange' | 'rose' | 'violet';
-  caption: string;
-  icon: string;
-  title: string;
-  value: string;
-  id: string;
-}
 
 export type FilterValue = 'all';
 
