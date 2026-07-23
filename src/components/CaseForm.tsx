@@ -1,13 +1,18 @@
 import { Check, X } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import {
+  getNextCaseTags,
+  validateCaseForm,
+  type CaseFormErrors,
+  type CaseFormValues,
+} from '../rules/caseValidation';
 import { getAvailableCaseStatuses } from '../rules/caseWorkflow';
-import type { CaseType, Category, City, Priority, Status } from '../types';
+import type { CaseType } from '../types';
 import {
   categoryLabels,
   categoryOptions,
   cityLabels,
   cityOptions,
-  getTagsByCategory,
   normalizeNumberInput,
   priorityLabels,
   priorityOptions,
@@ -15,6 +20,7 @@ import {
   statusOptions,
 } from '../utils';
 import Button from './Button';
+import { SelectField, TextareaField, TextField } from './FormControls';
 
 type CaseFormMode = 'add' | 'edit';
 
@@ -24,21 +30,6 @@ interface CaseFormProps {
   onCancel: () => void;
   onSave: (caseItem: CaseType) => void;
 }
-
-interface CaseFormValues {
-  assignedTo: string;
-  category: Category;
-  city: City;
-  customerName: string;
-  description: string;
-  estimatedLoss: string;
-  isEscalated: boolean;
-  priority: Priority;
-  status: Status;
-  title: string;
-}
-
-type CaseFormErrors = Partial<Record<keyof CaseFormValues, string>>;
 
 const getFormValues = (caseItem: CaseType | null): CaseFormValues => ({
   assignedTo: caseItem?.assignedTo || '',
@@ -52,37 +43,6 @@ const getFormValues = (caseItem: CaseType | null): CaseFormValues => ({
   status: caseItem?.status || 'open',
   title: caseItem?.title || '',
 });
-
-const validateForm = (values: CaseFormValues) => {
-  const errors: CaseFormErrors = {};
-  const estimatedLoss = Number(normalizeNumberInput(values.estimatedLoss));
-
-  if (!values.title.trim()) {
-    errors.title = 'عنوان پرونده الزامی است.';
-  } else if (values.title.trim().length < 4) {
-    errors.title = 'عنوان باید حداقل ۴ کاراکتر باشد.';
-  }
-
-  if (!values.customerName.trim()) {
-    errors.customerName = 'نام مشتری الزامی است.';
-  } else if (values.customerName.trim().length < 3) {
-    errors.customerName = 'نام مشتری خیلی کوتاه است.';
-  }
-
-  if (!values.estimatedLoss.trim()) {
-    errors.estimatedLoss = 'مبلغ ضرر احتمالی الزامی است.';
-  } else if (!Number.isFinite(estimatedLoss) || estimatedLoss < 0) {
-    errors.estimatedLoss = 'مبلغ باید عدد معتبر و صفر یا بیشتر باشد.';
-  }
-
-  if (!values.description.trim()) {
-    errors.description = 'شرح پرونده الزامی است.';
-  } else if (values.description.trim().length < 12) {
-    errors.description = 'شرح پرونده باید کمی کامل‌تر باشد.';
-  }
-
-  return errors;
-};
 
 const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
   const [values, setValues] = useState(() => getFormValues(caseItem));
@@ -123,7 +83,7 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const nextErrors = validateForm(values);
+    const nextErrors = validateCaseForm(values);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -142,7 +102,7 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
       lastUpdatedAt: new Date().toISOString(),
       priority: values.priority,
       status: values.status,
-      tags: getTagsByCategory(values.category),
+      tags: getNextCaseTags(caseItem, values.category),
       title: values.title.trim(),
     });
   };
@@ -286,115 +246,6 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
         </div>
       </form>
     </aside>
-  );
-};
-
-interface FieldProps {
-  autoFocus?: boolean;
-  error?: string;
-  inputMode?: 'text' | 'numeric';
-  label: string;
-  name: keyof CaseFormValues;
-  onChange: (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => void;
-  value: string;
-}
-
-const fieldClassName =
-  'h-12 w-full rounded-control border border-stroke-strong bg-surface-soft px-4 text-body text-ink outline-none transition placeholder:text-muted/75 focus:border-brand focus:bg-surface focus:shadow-focus disabled:cursor-not-allowed disabled:bg-surface-raised disabled:text-muted';
-
-const TextField = ({
-  autoFocus,
-  error,
-  inputMode = 'text',
-  label,
-  name,
-  onChange,
-  value,
-}: FieldProps) => {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
-      <input
-        className={fieldClassName}
-        aria-invalid={Boolean(error)}
-        autoFocus={autoFocus}
-        inputMode={inputMode}
-        name={name}
-        onChange={onChange}
-        value={value}
-      />
-      {error ? (
-        <span className="mt-1.5 block text-xs font-bold text-danger" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
-  );
-};
-
-interface SelectFieldProps extends Omit<FieldProps, 'autoFocus' | 'value'> {
-  disabled?: boolean;
-  options: { disabled?: boolean; label: string; value: string }[];
-  value: string;
-}
-
-const SelectField = ({
-  disabled = false,
-  label,
-  name,
-  onChange,
-  options,
-  value,
-}: SelectFieldProps) => {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
-      <select
-        className={fieldClassName}
-        disabled={disabled}
-        name={name}
-        onChange={onChange}
-        value={value}
-      >
-        {options.map((option) => (
-          <option
-            disabled={option.disabled}
-            key={option.value}
-            value={option.value}
-          >
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-};
-
-const TextareaField = ({
-  error,
-  label,
-  name,
-  onChange,
-  value,
-}: FieldProps) => {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
-      <textarea
-        className="min-h-32 w-full resize-y rounded-control border border-stroke-strong bg-surface-soft px-4 py-3 text-body text-ink outline-none transition focus:border-brand focus:bg-surface focus:shadow-focus"
-        aria-invalid={Boolean(error)}
-        name={name}
-        onChange={onChange}
-        value={value}
-      />
-      {error ? (
-        <span className="mt-1.5 block text-xs font-bold text-danger" role="alert">
-          {error}
-        </span>
-      ) : null}
-    </label>
   );
 };
 

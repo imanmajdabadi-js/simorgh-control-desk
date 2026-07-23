@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { initialCases } from './data/data';
 import {
   filterCases,
+  formatCaseCode,
   getCaseStats,
   normalizeNumberInput,
   normalizeSearchText,
@@ -29,10 +30,14 @@ describe('case data helpers', () => {
     expect(result.map((caseItem) => caseItem.id)).toEqual(['1']);
   });
 
+  it('formats the public case code in one shared place', () => {
+    expect(formatCaseCode('1')).toBe('SC-1041');
+  });
+
   it('calculates operational totals from active cases', () => {
     expect(getCaseStats(initialCases)).toEqual({
       totalCases: 8,
-      openCases: 6,
+      activeCases: 6,
       criticalCases: 2,
       escalatedCases: 4,
       unassignedCases: 1,

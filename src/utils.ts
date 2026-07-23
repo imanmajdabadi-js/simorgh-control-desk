@@ -88,6 +88,10 @@ export function formatMoney(value: number) {
   return `${formattedValue} تومان`;
 }
 
+export function formatCaseCode(id: string) {
+  return `SC-${1040 + Number(id)}`;
+}
+
 export function normalizeNumberInput(value: string) {
   const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
   const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
@@ -150,7 +154,7 @@ export function filterCases(cases: CaseType[], filters: CaseFilters) {
     const matchPriority =
       filters.priority === 'all' || caseItem.priority === filters.priority;
     const matchCity = filters.city === 'all' || caseItem.city === filters.city;
-    const caseCode = `SC-${1040 + Number(caseItem.id)}`;
+    const caseCode = formatCaseCode(caseItem.id);
     const searchableText = normalizeSearchText(
       [
         caseCode,
@@ -202,7 +206,7 @@ export function getCaseStats(cases: CaseType[]) {
   if (cases.length === 0) {
     return {
       totalCases: 0,
-      openCases: 0,
+      activeCases: 0,
       criticalCases: 0,
       escalatedCases: 0,
       unassignedCases: 0,
@@ -210,26 +214,26 @@ export function getCaseStats(cases: CaseType[]) {
     };
   }
 
-  const activeCases = cases.filter(
+  const activeCaseList = cases.filter(
     (caseItem) => caseItem.status === 'open' || caseItem.status === 'in_progress',
   );
-  const criticalCases = activeCases.filter(
+  const criticalCases = activeCaseList.filter(
     (caseItem) => caseItem.priority === 'critical',
   ).length;
-  const escalatedCases = activeCases.filter(
+  const escalatedCases = activeCaseList.filter(
     (caseItem) => caseItem.isEscalated,
   ).length;
-  const unassignedCases = activeCases.filter(
+  const unassignedCases = activeCaseList.filter(
     (caseItem) => !caseItem.assignedTo.trim(),
   ).length;
-  const totalLoss = activeCases.reduce(
+  const totalLoss = activeCaseList.reduce(
     (sum, caseItem) => sum + caseItem.estimatedLoss,
     0,
   );
 
   return {
     totalCases: cases.length,
-    openCases: activeCases.length,
+    activeCases: activeCaseList.length,
     criticalCases,
     escalatedCases,
     unassignedCases,

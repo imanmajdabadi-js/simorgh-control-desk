@@ -60,11 +60,16 @@ const Dashboard = () => {
   );
   const pageCases = visibleCases.slice(firstCaseIndex, firstCaseIndex + PAGE_SIZE);
   const selectedCase =
-    caseList.find((caseItem) => caseItem.id === selectedCaseId) || null;
+    pageCases.find((caseItem) => caseItem.id === selectedCaseId) || null;
   const editingCaseId = formMode === 'edit' ? caseFormItem?.id || null : null;
 
   useEffect(() => {
-    saveCases(caseList);
+    if (!saveCases(caseList)) {
+      toast.error('ذخیره‌سازی مرورگر انجام نشد', {
+        id: 'case-storage-error',
+        description: 'فضای ذخیره‌سازی مرورگر را بررسی کن و دوباره تلاش کن.',
+      });
+    }
   }, [caseList]);
 
   const summaryItems: SummaryItem[] = [
@@ -79,7 +84,7 @@ const Dashboard = () => {
     {
       id: 'open',
       title: 'نیازمند پیگیری',
-      value: stats.openCases.toString(),
+      value: stats.activeCases.toString(),
       caption: 'پرونده‌های باز',
       accent: 'green',
       icon: FolderClock,
@@ -133,11 +138,12 @@ const Dashboard = () => {
     if (confirmation?.type === 'delete') {
       const deletedCase = confirmation.caseItem;
       const nextCases = caseList.filter((caseItem) => caseItem.id !== deletedCase.id);
+      const nextVisibleCases = filterCases(nextCases, filters);
 
       dispatch({ type: 'DELETE_CASE', id: deletedCase.id });
 
       if (selectedCaseId === deletedCase.id) {
-        setSelectedCaseId(nextCases[0]?.id || '');
+        setSelectedCaseId(nextVisibleCases[0]?.id || '');
       }
 
       if (caseFormItem?.id === deletedCase.id) {
@@ -181,6 +187,11 @@ const Dashboard = () => {
     }
 
     const updatedAt = new Date().toISOString();
+    const updatedCase = {
+      ...currentCase,
+      status,
+      lastUpdatedAt: updatedAt,
+    };
 
     dispatch({
       type: 'CHANGE_STATUS',
@@ -191,9 +202,15 @@ const Dashboard = () => {
 
     setCaseFormItem((currentItem) =>
       currentItem?.id === id
-        ? { ...currentItem, status, lastUpdatedAt: updatedAt }
+        ? updatedCase
         : currentItem,
     );
+
+    if (selectedCaseId === id && filterCases([updatedCase], filters).length === 0) {
+      setSelectedCaseId('');
+    }
+
+    setCurrentPage(1);
 
     toast.info('وضعیت پرونده تغییر کرد', {
       description: 'تغییر جدید در مرورگر ذخیره شد.',
@@ -203,6 +220,8 @@ const Dashboard = () => {
   const handleSaveCase = (savedCase: CaseType) => {
     if (formMode === 'add') {
       dispatch({ type: 'ADD_CASE', caseItem: savedCase });
+      setFilters(initialFilters);
+      setSelectedCaseId(savedCase.id);
       toast.success('پرونده جدید ثبت شد', {
         description: 'پرونده به ابتدای صف پیگیری اضافه شد.',
       });
@@ -210,12 +229,14 @@ const Dashboard = () => {
 
     if (formMode === 'edit') {
       dispatch({ type: 'UPDATE_CASE', caseItem: savedCase });
+      setSelectedCaseId(
+        filterCases([savedCase], filters).length > 0 ? savedCase.id : '',
+      );
       toast.success('تغییرات ذخیره شد', {
         description: 'اطلاعات پرونده با موفقیت به‌روزرسانی شد.',
       });
     }
 
-    setSelectedCaseId(savedCase.id);
     setCaseFormItem(null);
     setFormMode(null);
     setCurrentPage(1);
@@ -229,11 +250,18 @@ const Dashboard = () => {
   const handleFilterChange = (nextFilters: CaseFilters) => {
     setFilters(nextFilters);
     setCurrentPage(1);
+    setSelectedCaseId('');
   };
 
   const handleResetFilters = () => {
     setFilters(initialFilters);
     setCurrentPage(1);
+    setSelectedCaseId('');
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectedCaseId('');
   };
 
   const handleShowCriticalCases = () => {
@@ -298,7 +326,7 @@ const Dashboard = () => {
 
             <Pagination
               currentPage={activePage}
-              onChange={setCurrentPage}
+              onChange={handlePageChange}
               pageCount={pageCount}
             />
           </section>

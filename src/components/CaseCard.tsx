@@ -11,6 +11,7 @@ import { getAvailableCaseStatuses } from '../rules/caseWorkflow';
 import type { CaseType, Status } from '../types';
 import {
   cityLabels,
+  formatCaseCode,
   formatMoney,
   statusLabels,
   statusOptions,
@@ -37,7 +38,7 @@ const CaseCard = ({
   onStatusChange,
   onView,
 }: CaseCardProps) => {
-  const caseCode = `SC-${1040 + Number(caseItem.id)}`;
+  const caseCode = formatCaseCode(caseItem.id);
   const availableStatuses = getAvailableCaseStatuses(caseItem.status);
 
   return (
@@ -100,9 +101,9 @@ const CaseCard = ({
         <label className="flex items-center gap-2">
           <span className="text-sm font-bold text-muted">وضعیت</span>
           <select
-            className="h-11 min-w-36 rounded-control border border-stroke-strong bg-surface px-3 text-sm font-bold text-ink outline-none transition hover:border-brand focus:border-brand focus:shadow-focus"
+            className="h-11 min-w-36 rounded-control border border-stroke-strong bg-surface px-3 text-sm font-bold text-ink outline-none transition hover:border-brand focus:border-brand focus:shadow-focus disabled:cursor-not-allowed disabled:bg-surface-raised disabled:text-muted"
             aria-label={`تغییر وضعیت پرونده ${caseCode}`}
-            disabled={availableStatuses.length === 1}
+            disabled={isEditing || availableStatuses.length === 1}
             onChange={(event) =>
               onStatusChange(caseItem.id, event.target.value as Status)
             }

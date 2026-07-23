@@ -1,27 +1,29 @@
 import type { CaseType } from '../types';
+import { isStoredCaseList } from '../rules/caseValidation';
 
 const STORAGE_KEY = 'simorgh-control-desk-cases-v3';
 
 export function loadCases(fallbackCases: CaseType[]) {
-  const savedCases = localStorage.getItem(STORAGE_KEY);
-
-  if (!savedCases) {
-    return fallbackCases;
-  }
-
   try {
-    const parsedCases = JSON.parse(savedCases);
+    const savedCases = localStorage.getItem(STORAGE_KEY);
 
-    if (Array.isArray(parsedCases)) {
-      return parsedCases as CaseType[];
+    if (!savedCases) {
+      return [...fallbackCases];
     }
 
-    return fallbackCases;
+    const parsedCases: unknown = JSON.parse(savedCases);
+
+    return isStoredCaseList(parsedCases) ? parsedCases : [...fallbackCases];
   } catch {
-    return fallbackCases;
+    return [...fallbackCases];
   }
 }
 
 export function saveCases(cases: CaseType[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+    return true;
+  } catch {
+    return false;
+  }
 }

@@ -10,6 +10,7 @@ import {
   statusOptions,
 } from '../utils';
 import Button from './Button';
+import { SelectField } from './FormControls';
 
 interface FiltersProps {
   filters: CaseFilters;
@@ -74,87 +75,74 @@ const Filters = ({ filters, onChange, onReset }: FiltersProps) => {
           />
         </label>
 
-        <FilterSelect
+        <SelectField
           label="وضعیت"
-          onChange={(value) =>
-            onChange({ ...filters, status: value as Status | 'all' })
+          name="status"
+          onChange={(event) =>
+            onChange({
+              ...filters,
+              status: event.target.value as Status | 'all',
+            })
           }
-          options={statusOptions.map((option) => ({
-            label: statusLabels[option],
-            value: option,
-          }))}
+          options={[
+            { label: 'همه', value: 'all' },
+            ...statusOptions.map((option) => ({
+              label: statusLabels[option],
+              value: option,
+            })),
+          ]}
           value={filters.status}
         />
 
-        <FilterSelect
+        <SelectField
           label="اولویت"
-          onChange={(value) =>
-            onChange({ ...filters, priority: value as Priority | 'all' })
+          name="priority"
+          onChange={(event) =>
+            onChange({
+              ...filters,
+              priority: event.target.value as Priority | 'all',
+            })
           }
-          options={priorityOptions.map((option) => ({
-            label: priorityLabels[option],
-            value: option,
-          }))}
+          options={[
+            { label: 'همه', value: 'all' },
+            ...priorityOptions.map((option) => ({
+              label: priorityLabels[option],
+              value: option,
+            })),
+          ]}
           value={filters.priority}
         />
 
-        <FilterSelect
+        <SelectField
           label="شهر"
-          onChange={(value) =>
-            onChange({ ...filters, city: value as City | 'all' })
+          name="city"
+          onChange={(event) =>
+            onChange({
+              ...filters,
+              city: event.target.value as City | 'all',
+            })
           }
-          options={cityOptions.map((option) => ({
-            label: cityLabels[option],
-            value: option,
-          }))}
+          options={[
+            { label: 'همه', value: 'all' },
+            ...cityOptions.map((option) => ({
+              label: cityLabels[option],
+              value: option,
+            })),
+          ]}
           value={filters.city}
         />
 
-        <FilterSelect
+        <SelectField
           label="مرتب‌سازی"
-          onChange={(value) =>
-            onChange({ ...filters, sort: value as CaseSort })
+          name="sort"
+          onChange={(event) =>
+            onChange({ ...filters, sort: event.target.value as CaseSort })
           }
           options={sortOptions}
-          showAllOption={false}
           value={filters.sort}
         />
       </div>
     </section>
-  );
-};
-
-interface FilterSelectProps {
-  label: string;
-  onChange: (value: string) => void;
-  options: { label: string; value: string }[];
-  showAllOption?: boolean;
-  value: string;
-}
-
-const FilterSelect = ({
-  label,
-  onChange,
-  options,
-  showAllOption = true,
-  value,
-}: FilterSelectProps) => {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
-      <select
-        className="h-12 w-full rounded-control border border-stroke-strong bg-surface-soft px-3 text-body text-ink outline-none transition focus:border-brand focus:bg-surface focus:shadow-focus"
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
-      >
-        {showAllOption ? <option value="all">همه</option> : null}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 };
 

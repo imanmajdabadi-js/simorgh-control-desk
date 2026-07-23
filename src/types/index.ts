@@ -8,8 +8,8 @@ export interface CaseType {
   status: Status;
   assignedTo: string;
   estimatedLoss: number;
-  createdAt: string | Date;
-  lastUpdatedAt: string | Date;
+  createdAt: string;
+  lastUpdatedAt: string;
   description: string;
   tags: CaseTag[];
   isEscalated: boolean;

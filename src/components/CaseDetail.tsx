@@ -12,6 +12,7 @@ import type { CaseType } from '../types';
 import {
   categoryLabels,
   cityLabels,
+  formatCaseCode,
   formatMoney,
   statusLabels,
 } from '../utils';
@@ -39,7 +40,7 @@ const CaseDetail = ({ caseItem, onClose, onEdit }: CaseDetailProps) => {
     );
   }
 
-  const caseCode = `SC-${1040 + Number(caseItem.id)}`;
+  const caseCode = formatCaseCode(caseItem.id);
   const createdAt = new Date(caseItem.createdAt).toLocaleString('fa-IR');
   const updatedAt = new Date(caseItem.lastUpdatedAt).toLocaleString('fa-IR');
 

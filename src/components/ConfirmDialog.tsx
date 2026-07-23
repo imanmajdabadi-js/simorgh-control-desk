@@ -1,5 +1,5 @@
 import { AlertTriangle, RotateCcw, Trash2, X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Button from './Button';
 
 interface ConfirmDialogProps {
@@ -23,20 +23,56 @@ const ConfirmDialog = ({
   title,
   tone,
 }: ConfirmDialogProps) => {
+  const dialogRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
+    const previousFocusedElement =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onCancel();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) {
+        return;
+      }
+
+      const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (!firstElement || !lastElement) {
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
 
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocusedElement?.focus();
+    };
   }, [isOpen, onCancel]);
 
   if (!isOpen) {
@@ -49,6 +85,11 @@ const ConfirmDialog = ({
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-navy/55 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onCancel();
+        }
+      }}
       role="presentation"
     >
       <section
@@ -57,6 +98,7 @@ const ConfirmDialog = ({
         aria-labelledby="confirm-dialog-title"
         aria-modal="true"
         dir="rtl"
+        ref={dialogRef}
         role="dialog"
       >
         <div className="flex items-start gap-4">

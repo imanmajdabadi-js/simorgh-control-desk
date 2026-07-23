@@ -26,7 +26,7 @@ const Summary = ({ summary }: SummaryProps) => {
   const Icon = summary.icon;
 
   return (
-    <article className="group flex min-h-36 animate-enter items-center gap-4 rounded-panel border border-stroke bg-surface p-5 shadow-panel transition duration-200 hover:-translate-y-1 hover:border-stroke-strong hover:shadow-panel-hover">
+    <article className="flex min-h-36 animate-enter items-center gap-4 rounded-panel border border-stroke bg-surface p-5 shadow-panel">
       <div
         className={`grid h-13 w-13 shrink-0 place-items-center rounded-2xl ring-1 ${accentClasses[summary.accent]}`}
         aria-hidden="true"
