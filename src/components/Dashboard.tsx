@@ -8,6 +8,7 @@ import { useEffect, useReducer, useState } from 'react';
 import { toast } from 'sonner';
 import { initialCases } from '../data/data';
 import { caseReducer } from '../reducers/caseReducer';
+import { canChangeCaseStatus } from '../rules/caseWorkflow';
 import { loadCases, saveCases } from '../services';
 import type { CaseFilters, CaseType, Status } from '../types';
 import { createDraftCase, filterCases, formatMoney, getCaseStats } from '../utils';
@@ -166,6 +167,19 @@ const Dashboard = () => {
   };
 
   const handleStatusChange = (id: string, status: Status) => {
+    const currentCase = caseList.find((caseItem) => caseItem.id === id);
+
+    if (!currentCase || currentCase.status === status) {
+      return;
+    }
+
+    if (!canChangeCaseStatus(currentCase.status, status)) {
+      toast.error('این تغییر وضعیت مجاز نیست', {
+        description: 'پرونده باید مرحله‌های چرخه پیگیری را به‌ترتیب طی کند.',
+      });
+      return;
+    }
+
     const updatedAt = new Date().toISOString();
 
     dispatch({

@@ -1,5 +1,6 @@
 import { Check, X } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { getAvailableCaseStatuses } from '../rules/caseWorkflow';
 import type { CaseType, Category, City, Priority, Status } from '../types';
 import {
   categoryLabels,
@@ -90,6 +91,9 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
   if (!caseItem) {
     return null;
   }
+
+  const availableStatuses =
+    mode === 'add' ? ['open'] : getAvailableCaseStatuses(caseItem.status);
 
   const handleTextChange = (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -210,13 +214,19 @@ const CaseForm = ({ caseItem, mode, onCancel, onSave }: CaseFormProps) => {
             value={values.priority}
           />
           <SelectField
+            disabled={mode === 'add' || availableStatuses.length === 1}
             label="وضعیت"
             name="status"
             onChange={handleTextChange}
-            options={statusOptions.map((option) => ({
-              label: statusLabels[option],
-              value: option,
-            }))}
+            options={statusOptions.map((option) => {
+              const isAvailable = availableStatuses.includes(option);
+
+              return {
+                disabled: !isAvailable,
+                label: statusLabels[option],
+                value: option,
+              };
+            })}
             value={values.status}
           />
         </div>
@@ -292,7 +302,7 @@ interface FieldProps {
 }
 
 const fieldClassName =
-  'h-12 w-full rounded-control border border-stroke-strong bg-surface-soft px-4 text-body text-ink outline-none transition placeholder:text-muted/75 focus:border-brand focus:bg-surface focus:shadow-focus';
+  'h-12 w-full rounded-control border border-stroke-strong bg-surface-soft px-4 text-body text-ink outline-none transition placeholder:text-muted/75 focus:border-brand focus:bg-surface focus:shadow-focus disabled:cursor-not-allowed disabled:bg-surface-raised disabled:text-muted';
 
 const TextField = ({
   autoFocus,
@@ -325,11 +335,13 @@ const TextField = ({
 };
 
 interface SelectFieldProps extends Omit<FieldProps, 'autoFocus' | 'value'> {
-  options: { label: string; value: string }[];
+  disabled?: boolean;
+  options: { disabled?: boolean; label: string; value: string }[];
   value: string;
 }
 
 const SelectField = ({
+  disabled = false,
   label,
   name,
   onChange,
@@ -341,12 +353,17 @@ const SelectField = ({
       <span className="mb-2 block text-sm font-bold text-ink-soft">{label}</span>
       <select
         className={fieldClassName}
+        disabled={disabled}
         name={name}
         onChange={onChange}
         value={value}
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            disabled={option.disabled}
+            key={option.value}
+            value={option.value}
+          >
             {option.label}
           </option>
         ))}

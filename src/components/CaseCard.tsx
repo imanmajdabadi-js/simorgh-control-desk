@@ -7,6 +7,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { getAvailableCaseStatuses } from '../rules/caseWorkflow';
 import type { CaseType, Status } from '../types';
 import {
   cityLabels,
@@ -37,6 +38,7 @@ const CaseCard = ({
   onView,
 }: CaseCardProps) => {
   const caseCode = `SC-${1040 + Number(caseItem.id)}`;
+  const availableStatuses = getAvailableCaseStatuses(caseItem.status);
 
   return (
     <article
@@ -100,13 +102,18 @@ const CaseCard = ({
           <select
             className="h-11 min-w-36 rounded-control border border-stroke-strong bg-surface px-3 text-sm font-bold text-ink outline-none transition hover:border-brand focus:border-brand focus:shadow-focus"
             aria-label={`تغییر وضعیت پرونده ${caseCode}`}
+            disabled={availableStatuses.length === 1}
             onChange={(event) =>
               onStatusChange(caseItem.id, event.target.value as Status)
             }
             value={caseItem.status}
           >
             {statusOptions.map((status) => (
-              <option key={status} value={status}>
+              <option
+                disabled={!availableStatuses.includes(status)}
+                key={status}
+                value={status}
+              >
                 {statusLabels[status]}
               </option>
             ))}
