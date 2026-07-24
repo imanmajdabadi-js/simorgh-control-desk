@@ -27,7 +27,7 @@ const Header = ({ onAddCase, onResetCases, totalCases }: HeaderProps) => {
                 میز کنترل سیمرغ
               </h1>
               <span className="inline-flex min-h-7 items-center rounded-full border border-blue-200 bg-blue-50 px-3 text-xs font-bold text-brand">
-                نسخه نمایشی
+                نسخه آزمایشی
               </span>
             </div>
             <p className="mt-1 text-sm leading-6 text-muted">
